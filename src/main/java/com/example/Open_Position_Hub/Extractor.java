@@ -1,6 +1,8 @@
 package com.example.Open_Position_Hub;
 
 import java.io.IOException;
+import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
@@ -9,39 +11,33 @@ public class Extractor {
 
     public void extract(Document doc) {
 
-        // Extract specific data: Example for extracting titles within <h2> tags
-        Elements titles = doc.select("h2");
-        System.out.println("Extracted Titles:");
-        for (Element title : titles) {
-            System.out.println(title.text());
-        }
+        Elements jobCards = doc.select("li.card_item");
 
-        // Extract links
-        Elements links = doc.select("a[href]");
-        System.out.println("\nExtracted Links:");
-        for (Element link : links) {
-            System.out.println(link.attr("href") + " - " + link.text());
-        }
+        System.out.println("Extracted Job Information:");
+        for (Element card : jobCards) {
+            String title = card.select("h4.card_title").text();
+            Elements details = card.select("dl.card_info dd.info_text");
 
-        // Extract images
-        Elements images = doc.select("img[src]");
-        System.out.println("\nExtracted Images:");
-        for (Element image : images) {
-            System.out.println(image.attr("src"));
+            System.out.println("Title: " + title);
+            for (Element detail : details) {
+                System.out.println("Detail: " + detail.text());
+            }
+
         }
 
     }
 
     public static void main(String[] args) {
 
+        System.setOut(new PrintStream(System.out, true, StandardCharsets.UTF_8));
+
         Scraper scraper = new Scraper();
-        String url = "https://www.google.com/";
+        String url = "https://recruit.navercorp.com/rcrt/list.do?lang=ko";
         Extractor extractor = new Extractor();
 
         try {
             Document doc = scraper.fetchHtml(url);
             extractor.extract(doc);
-            System.out.println("success");
         } catch (IOException e) {
             System.err.println("fail: " + e.getMessage());
         }
