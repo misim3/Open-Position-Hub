@@ -6,15 +6,13 @@ import org.jsoup.nodes.Document;
 
 public class Scraper {
 
-    public String fetchHtml(String url) throws IOException {
+    public Document fetchHtml(String url) throws IOException {
 
         try {
 
-            Document doc = Jsoup.connect(url)
+            return Jsoup.connect(url)
                 .timeout(5000)
                 .get();
-
-            return doc.html();
 
         } catch (IOException e) {
 
@@ -31,9 +29,9 @@ public class Scraper {
         String url = "https://www.google.com/";
 
         try {
-            String html = scraper.fetchHtml(url);
+            Document doc = scraper.fetchHtml(url);
             System.out.println("success");
-            System.out.println(html);
+            System.out.println(doc.html());
         } catch (IOException e) {
             System.err.println("fail: " + e.getMessage());
         }
