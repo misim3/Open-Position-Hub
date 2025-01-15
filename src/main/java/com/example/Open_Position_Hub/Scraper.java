@@ -1,10 +1,29 @@
 package com.example.Open_Position_Hub;
 
 import java.io.IOException;
+import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
 public class Scraper {
+
+    public static void main(String[] args) {
+
+        System.setOut(new PrintStream(System.out, true, StandardCharsets.UTF_8));
+
+        Scraper scraper = new Scraper();
+        String url = "https://recruit.navercorp.com/rcrt/list.do?lang=ko";
+
+        try {
+            Document doc = scraper.fetchHtml(url);
+            System.out.println("success");
+            System.out.println(doc.html());
+        } catch (IOException e) {
+            System.err.println("fail: " + e.getMessage());
+        }
+
+    }
 
     public Document fetchHtml(String url) throws IOException {
 
@@ -19,21 +38,6 @@ public class Scraper {
             System.err.println(e.getMessage());
             throw e;
 
-        }
-
-    }
-
-    public static void main(String[] args) {
-
-        Scraper scraper = new Scraper();
-        String url = "https://www.google.com/";
-
-        try {
-            Document doc = scraper.fetchHtml(url);
-            System.out.println("success");
-            System.out.println(doc.html());
-        } catch (IOException e) {
-            System.err.println("fail: " + e.getMessage());
         }
 
     }
