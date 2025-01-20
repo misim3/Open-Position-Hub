@@ -73,6 +73,41 @@ public class Extractor {
 
     }
 
+    public void extractGreeting(Document doc) {
+
+        Elements listViewA = doc.select("div[listviewtype='a']");
+        Elements listViewB = doc.select("div[listviewtype='b']");
+
+        if (listViewA != null) {
+            handleListViewA(listViewA);
+        } else if (listViewB != null) {
+            handleListViewB(listViewB);
+        }
+
+    }
+
+    private void handleListViewA(Elements listViewA) {
+        handleFilterBar(listViewA.select("div.sc-df4c3229-0.dPCaxA.sc-7b0260df-0.gRdgwV"));
+        handleJobCards(listViewA.select("div.sc-9b56f69e-0.enoHnQ"));
+    }
+
+    private void handleListViewB(Elements listViewB) {
+        handleSideBar(listViewB.select("div.sc-4384c63b-0.dpoYEo"));
+        handleJobCards(listViewB.select("div.sc-9b56f69e-0.enoHnQ"));
+    }
+
+    private void handleFilterBar(Elements listViewA) {
+
+    }
+
+    private void handleSideBar(Elements listViewB) {
+
+    }
+
+    private void handleJobCards(Elements jobCards) {
+
+    }
+
     public static void main(String[] args) {
 
         System.setOut(new PrintStream(System.out, true, StandardCharsets.UTF_8));
