@@ -11,9 +11,15 @@ import org.jsoup.select.Elements;
 public class Extractor {
 
     private CssSelector selector;
+    private JobPostingRepository JobPostingRepository;
 
     public Extractor(CssSelector selector) {
         this.selector = selector;
+    }
+
+    public Extractor(CssSelector selector, JobPostingRepository JobPostingRepository) {
+        this.selector = selector;
+        this.JobPostingRepository = JobPostingRepository;
     }
 
     public void extractCompanyN(Document doc) {
@@ -168,7 +174,7 @@ public class Extractor {
         Extractor extractor = new Extractor(new CssSelector());
 
         try {
-            Document doc = scraper.fetchHtml(urlCompanyD2_A);
+            Document doc = scraper.fetchHtml(urlCompanyD1_B);
             extractor.extractGreeting(doc);
         } catch (IOException e) {
             System.err.println("fail: " + e.getMessage());
