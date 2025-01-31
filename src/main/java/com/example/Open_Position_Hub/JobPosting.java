@@ -35,4 +35,15 @@ public class JobPosting {
     public String getLocation() {
         return location;
     }
+
+    @Override
+    public String toString() {
+        return "JobPosting{" +
+            "title='" + title + '\'' +
+            ", category='" + category + '\'' +
+            ", experienceLevel='" + experienceLevel + '\'' +
+            ", employmentType='" + employmentType + '\'' +
+            ", location='" + location + '\'' +
+            '}';
+    }
 }
