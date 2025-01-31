@@ -248,41 +248,12 @@ public class Extractor {
         Elements jobCards = e.select("div.sc-9b56f69e-0.jlntFl");
 
         for (Element jobCard : jobCards) {
-            String title = jobCard.select("span.sc-86b147bc-0.gIOkaZ.sc-d200d649-1.dKCwbm").text();
-            String category = "";
-            String experienceLevel = "";
-            String employmentType = "";
-            String location = "";
 
+            String title = jobCard.select("span.sc-86b147bc-0.gIOkaZ.sc-d200d649-1.dKCwbm").text();
             Elements details = jobCard.select("span.sc-be6466ed-3.bDOHei");
 
-            for (Element detail : details) {
-                for (Entry<String, List<String>> criteria : criteriaList.entrySet()) {
-                    if (criteria.getValue().contains(detail.text())) {
-                        switch (criteria.getKey()) {
-                            case "직군":
-                                category = detail.text();
-                                break;
-                            case "경력사항":
-                                experienceLevel = detail.text();
-                                break;
-                            case "고용형태":
-                                employmentType = detail.text();
-                                break;
-                            case "근무지":
-                                location = detail.text();
-                                break;
-                        }
-                    }
-                    if (experienceLevel.isEmpty() && detail.text().contains("경력")) {
-                        experienceLevel = detail.text();
-                        break;
-                    }
-                }
-            }
+            list.add(Convertor.convertGreeting(title, details, criteriaList));
 
-            JobPosting jobPosting = new JobPosting(title, category, experienceLevel, employmentType, location);
-            list.add(jobPosting);
         }
 
         return list;
