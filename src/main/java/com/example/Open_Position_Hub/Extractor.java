@@ -3,7 +3,11 @@ package com.example.Open_Position_Hub;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
@@ -14,6 +18,25 @@ public class Extractor {
 
     public Extractor(CssSelector selector) {
         this.selector = selector;
+    }
+
+    public static void main(String[] args) {
+
+        System.setOut(new PrintStream(System.out, true, StandardCharsets.UTF_8));
+
+        Scraper scraper = new Scraper();
+        String urlCompanyN = "https://recruit.navercorp.com/rcrt/list.do?lang=ko";
+        String urlCompanyD1_B = "https://www.doodlin.co.kr/career#3276397a-a988-4ca5-ab47-9aa05e9cce30";
+        String urlCompanyD2_A = "https://teamdoeat.career.greetinghr.com/home#323ea93b-ce52-45c9-bbbf-0b85ad135508";
+
+        Extractor extractor = new Extractor(new CssSelector());
+
+        try {
+            Document doc = scraper.fetchHtml(urlCompanyD1_B);
+            extractor.extractGreeting2(doc).forEach(System.out::println);
+        } catch (IOException e) {
+            System.err.println("fail: " + e.getMessage());
+        }
     }
 
     public void extractCompanyN(Document doc) {
@@ -73,7 +96,7 @@ public class Extractor {
 
     }
 
-    public void extractGreeting(Document doc) {
+    public void extractGreeting1(Document doc) {
 
         Elements listViewA = doc.select("div[listviewtype='a']");
         Elements listViewB = doc.select("div[listviewtype='b']");
@@ -152,26 +175,116 @@ public class Extractor {
                 System.out.println("details: " + detail.text());
             }
         }
+    }
 
+    public List<JobPosting> extractGreeting2(Document doc) {
+
+        List<JobPosting> list = new ArrayList<>();
+
+        Elements listViewA = doc.select("div[listviewtype='a']");
+        Elements listViewB = doc.select("div[listviewtype='b']");
+
+        if (!listViewA.isEmpty()) {
+            handleListViewA(listViewA);
+        } else if (!listViewB.isEmpty()) {
+            list = handleListViewB2(listViewB);
+        } else {
+            System.out.println("fail to extract greeting");
+        }
+
+        return list;
+    }
+
+    private void handleListViewA(Elements listViewA, Map<String, List<String>> map) {
+        handleFilterBar(listViewA.select("div.sc-df4c3229-0.dPCaxA.sc-7b0260df-0.gRdgwV"), map);
+        handleJobCards2(listViewA.select("div.sc-9b56f69e-0.enoHnQ"), map);
+    }
+
+    private List<JobPosting> handleListViewB2(Elements listViewB) {
+        Map<String, List<String>> criteria = handleSideBar2(listViewB.select("div.sc-4384c63b-0.dpoYEo"));
+        return handleJobCards2(listViewB.select("div.sc-9b56f69e-0.enoHnQ"), criteria);
+    }
+
+    private void handleFilterBar(Elements e, Map<String, List<String>> map) {
+
+        Elements categories = e.select("div.sc-2050f279-0.gczZbu");
+
+        System.out.println("Filter Bar:");
+
+        for (Element category : categories) {
+            String text = category.select("span.sc-86b147bc-0.ghZIoe").text();
+            String name = text.replaceAll("\\s*\\(\\d+\\)", "");
+            System.out.println("----------------------------");
+            System.out.println("name: " + name);
+
+        }
 
     }
 
-    public static void main(String[] args) {
+    private Map<String, List<String>> handleSideBar2(Elements e) {
 
-        System.setOut(new PrintStream(System.out, true, StandardCharsets.UTF_8));
+        Map<String, List<String>> map = new HashMap<>();
 
-        Scraper scraper = new Scraper();
-        String urlCompanyN = "https://recruit.navercorp.com/rcrt/list.do?lang=ko";
-        String urlCompanyD1_B = "https://www.doodlin.co.kr/career#3276397a-a988-4ca5-ab47-9aa05e9cce30";
-        String urlCompanyD2_A = "https://teamdoeat.career.greetinghr.com/home#323ea93b-ce52-45c9-bbbf-0b85ad135508";
+        Elements categories = e.select("div.sc-f960cb4f-0.fyUmrl");
 
-        Extractor extractor = new Extractor(new CssSelector());
+        for (Element category : categories) {
+            String name = category.select("span.sc-86b147bc-0.jrtDxx").text();
 
-        try {
-            Document doc = scraper.fetchHtml(urlCompanyD2_A);
-            extractor.extractGreeting(doc);
-        } catch (IOException e) {
-            System.err.println("fail: " + e.getMessage());
+            Elements checkboxes = category.select("label[role='checkbox']");
+            List<String> list = new ArrayList<>();
+            for (Element checkbox : checkboxes) {
+                list.add(checkbox.text());
+            }
+
+            map.put(name, list);
         }
+
+        return map;
+    }
+
+    private List<JobPosting> handleJobCards2(Elements e, Map<String, List<String>> criteriaList) {
+
+        List<JobPosting> list = new ArrayList<>();
+        Elements jobCards = e.select("div.sc-9b56f69e-0.jlntFl");
+
+        for (Element jobCard : jobCards) {
+            String title = jobCard.select("span.sc-86b147bc-0.gIOkaZ.sc-d200d649-1.dKCwbm").text();
+            String category = "";
+            String experienceLevel = "";
+            String employmentType = "";
+            String location = "";
+
+            Elements details = jobCard.select("span.sc-be6466ed-3.bDOHei");
+
+            for (Element detail : details) {
+                for (Entry<String, List<String>> criteria : criteriaList.entrySet()) {
+                    if (criteria.getValue().contains(detail.text())) {
+                        switch (criteria.getKey()) {
+                            case "직군":
+                                category = detail.text();
+                                break;
+                            case "경력사항":
+                                experienceLevel = detail.text();
+                                break;
+                            case "고용형태":
+                                employmentType = detail.text();
+                                break;
+                            case "근무지":
+                                location = detail.text();
+                                break;
+                        }
+                    }
+                    if (experienceLevel.isEmpty() && detail.text().contains("경력")) {
+                        experienceLevel = detail.text();
+                        break;
+                    }
+                }
+            }
+
+            JobPosting jobPosting = new JobPosting(title, category, experienceLevel, employmentType, location);
+            list.add(jobPosting);
+        }
+
+        return list;
     }
 }
