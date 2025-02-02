@@ -3,6 +3,9 @@ package com.example.Open_Position_Hub;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -11,9 +14,30 @@ import org.jsoup.select.Elements;
 public class Extractor {
 
     private CssSelector selector;
+    private JobDataExtractorSelenium jobDataExtractorSelenium;
 
-    public Extractor(CssSelector selector) {
+    public Extractor(CssSelector selector, JobDataExtractorSelenium jobDataExtractorSelenium) {
         this.selector = selector;
+        this.jobDataExtractorSelenium = jobDataExtractorSelenium;
+    }
+
+    public static void main(String[] args) {
+
+        System.setOut(new PrintStream(System.out, true, StandardCharsets.UTF_8));
+
+        Scraper scraper = new Scraper();
+        String urlCompanyN = "https://recruit.navercorp.com/rcrt/list.do?lang=ko";
+        String urlCompanyD1_B = "https://www.doodlin.co.kr/career#3276397a-a988-4ca5-ab47-9aa05e9cce30";
+        String urlCompanyD2_A = "https://teamdoeat.career.greetinghr.com/home#323ea93b-ce52-45c9-bbbf-0b85ad135508";
+
+        Extractor extractor = new Extractor(new CssSelector(), new JobDataExtractorSelenium());
+
+        try {
+            Document doc = scraper.fetchHtml(urlCompanyD2_A);
+            extractor.extractGreeting2(doc, urlCompanyD2_A).forEach(System.out::println);
+        } catch (IOException e) {
+            System.err.println("fail: " + e.getMessage());
+        }
     }
 
     public void extractCompanyN(Document doc) {
@@ -73,7 +97,7 @@ public class Extractor {
 
     }
 
-    public void extractGreeting(Document doc) {
+    public void extractGreeting1(Document doc) {
 
         Elements listViewA = doc.select("div[listviewtype='a']");
         Elements listViewB = doc.select("div[listviewtype='b']");
@@ -152,26 +176,71 @@ public class Extractor {
                 System.out.println("details: " + detail.text());
             }
         }
-
-
     }
 
-    public static void main(String[] args) {
+    public List<JobPosting> extractGreeting2(Document doc, String url) {
 
-        System.setOut(new PrintStream(System.out, true, StandardCharsets.UTF_8));
+        List<JobPosting> list = new ArrayList<>();
 
-        Scraper scraper = new Scraper();
-        String urlCompanyN = "https://recruit.navercorp.com/rcrt/list.do?lang=ko";
-        String urlCompanyD1_B = "https://www.doodlin.co.kr/career#3276397a-a988-4ca5-ab47-9aa05e9cce30";
-        String urlCompanyD2_A = "https://teamdoeat.career.greetinghr.com/home#323ea93b-ce52-45c9-bbbf-0b85ad135508";
+        Elements listViewA = doc.select("div[listviewtype='a']");
+        Elements listViewB = doc.select("div[listviewtype='b']");
 
-        Extractor extractor = new Extractor(new CssSelector());
-
-        try {
-            Document doc = scraper.fetchHtml(urlCompanyD2_A);
-            extractor.extractGreeting(doc);
-        } catch (IOException e) {
-            System.err.println("fail: " + e.getMessage());
+        if (!listViewA.isEmpty()) {
+            list = handleListViewA2(listViewA, url);
+        } else if (!listViewB.isEmpty()) {
+            list = handleListViewB2(listViewB);
+        } else {
+            System.out.println("fail to extract greeting");
         }
+
+        return list;
+    }
+
+    private List<JobPosting> handleListViewA2(Elements listViewA, String url) {
+        Map<String, List<String>> criteria = jobDataExtractorSelenium.handleFilterBar(url);
+        return handleJobCards2(listViewA.select("div.sc-9b56f69e-0.enoHnQ"), criteria);
+    }
+
+    private List<JobPosting> handleListViewB2(Elements listViewB) {
+        Map<String, List<String>> criteria = handleSideBar2(listViewB.select("div.sc-4384c63b-0.dpoYEo"));
+        return handleJobCards2(listViewB.select("div.sc-9b56f69e-0.enoHnQ"), criteria);
+    }
+
+    private Map<String, List<String>> handleSideBar2(Elements e) {
+
+        Map<String, List<String>> map = new LinkedHashMap<>();
+
+        Elements categories = e.select("div.sc-f960cb4f-0.fyUmrl");
+
+        for (Element category : categories) {
+            String name = category.select("span.sc-86b147bc-0.jrtDxx").text();
+
+            Elements checkboxes = category.select("label[role='checkbox']");
+            List<String> list = new ArrayList<>();
+            for (Element checkbox : checkboxes) {
+                list.add(checkbox.text());
+            }
+
+            map.put(name, list);
+        }
+
+        return map;
+    }
+
+    private List<JobPosting> handleJobCards2(Elements e, Map<String, List<String>> criteriaList) {
+
+        List<JobPosting> list = new ArrayList<>();
+        Elements jobCards = e.select("div.sc-9b56f69e-0.jlntFl");
+
+        for (Element jobCard : jobCards) {
+
+            String title = jobCard.select("span.sc-86b147bc-0.gIOkaZ.sc-d200d649-1.dKCwbm").text();
+            Elements details = jobCard.select("span.sc-be6466ed-3.bDOHei");
+
+            list.add(Convertor.convertGreeting(title, details, criteriaList));
+
+        }
+
+        return list;
     }
 }
