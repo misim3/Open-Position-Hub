@@ -1,5 +1,6 @@
-package com.example.Open_Position_Hub;
+package com.example.Open_Position_Hub.collector;
 
+import com.example.Open_Position_Hub.db.JobPostingEntity;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -8,7 +9,7 @@ import org.jsoup.select.Elements;
 
 public class Convertor {
 
-    public static JobPosting convertGreeting(String title, Elements details, Map<String, List<String>> criteriaList) {
+    public static JobPostingEntity convertGreeting(String title, Elements details, Map<String, List<String>> criteriaList) {
 
         String category = "";
         String experienceLevel = "";
@@ -40,7 +41,7 @@ public class Convertor {
             }
         }
 
-        return new JobPosting(title, category, experienceLevel, employmentType, location);
+        return new JobPostingEntity(title, category, experienceLevel, employmentType, location,null);
 
     }
 }
