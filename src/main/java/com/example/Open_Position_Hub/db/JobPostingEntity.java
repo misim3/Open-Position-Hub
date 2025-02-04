@@ -1,19 +1,27 @@
-package com.example.Open_Position_Hub;
+package com.example.Open_Position_Hub.db;
 
-public class JobPosting {
+import jakarta.persistence.Entity;
+
+@Entity
+public class JobPostingEntity extends BaseEntity {
 
     private String title;
     private String category;
     private String experienceLevel;
     private String employmentType;
     private String location;
+    private String detailUrl;
 
-    public JobPosting(String title, String category, String experienceLevel, String employmentType, String location) {
+    protected JobPostingEntity() {}
+
+    public JobPostingEntity(String title, String category, String experienceLevel, String employmentType,
+        String location, String detailUrl) {
         this.title = title;
         this.category = category;
         this.experienceLevel = experienceLevel;
         this.employmentType = employmentType;
         this.location = location;
+        this.detailUrl = detailUrl;
     }
 
     public String getTitle() {
@@ -36,14 +44,14 @@ public class JobPosting {
         return location;
     }
 
+    public String getDetailUrl() {
+        return detailUrl;
+    }
+
     @Override
     public String toString() {
-        return "JobPosting{" +
-            "title='" + title + '\'' +
-            ", category='" + category + '\'' +
-            ", experienceLevel='" + experienceLevel + '\'' +
-            ", employmentType='" + employmentType + '\'' +
-            ", location='" + location + '\'' +
-            '}';
+        return "JobPosting{" + "title='" + title + '\'' + ", category='" + category + '\''
+            + ", experienceLevel='" + experienceLevel + '\'' + ", employmentType='" + employmentType
+            + '\'' + ", location='" + location + '\'' + ", detailUrl='" + detailUrl + '\'' + '}';
     }
 }
