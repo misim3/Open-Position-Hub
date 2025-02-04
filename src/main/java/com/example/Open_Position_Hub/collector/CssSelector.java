@@ -1,4 +1,4 @@
-package com.example.Open_Position_Hub;
+package com.example.Open_Position_Hub.collector;
 
 import java.util.HashMap;
 import java.util.Map;

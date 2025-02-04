@@ -1,5 +1,6 @@
-package com.example.Open_Position_Hub;
+package com.example.Open_Position_Hub.collector;
 
+import com.example.Open_Position_Hub.db.JobPostingEntity;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
@@ -178,9 +179,9 @@ public class Extractor {
         }
     }
 
-    public List<JobPosting> extractGreeting2(Document doc, String url) {
+    public List<JobPostingEntity> extractGreeting2(Document doc, String url) {
 
-        List<JobPosting> list = new ArrayList<>();
+        List<JobPostingEntity> list = new ArrayList<>();
 
         Elements listViewA = doc.select("div[listviewtype='a']");
         Elements listViewB = doc.select("div[listviewtype='b']");
@@ -196,12 +197,12 @@ public class Extractor {
         return list;
     }
 
-    private List<JobPosting> handleListViewA2(Elements listViewA, String url) {
+    private List<JobPostingEntity> handleListViewA2(Elements listViewA, String url) {
         Map<String, List<String>> criteria = jobDataExtractorSelenium.handleFilterBar(url);
         return handleJobCards2(listViewA.select("div.sc-9b56f69e-0.enoHnQ"), criteria);
     }
 
-    private List<JobPosting> handleListViewB2(Elements listViewB) {
+    private List<JobPostingEntity> handleListViewB2(Elements listViewB) {
         Map<String, List<String>> criteria = handleSideBar2(listViewB.select("div.sc-4384c63b-0.dpoYEo"));
         return handleJobCards2(listViewB.select("div.sc-9b56f69e-0.enoHnQ"), criteria);
     }
@@ -227,9 +228,9 @@ public class Extractor {
         return map;
     }
 
-    private List<JobPosting> handleJobCards2(Elements e, Map<String, List<String>> criteriaList) {
+    private List<JobPostingEntity> handleJobCards2(Elements e, Map<String, List<String>> criteriaList) {
 
-        List<JobPosting> list = new ArrayList<>();
+        List<JobPostingEntity> list = new ArrayList<>();
         Elements jobCards = e.select("div.sc-9b56f69e-0.jlntFl");
 
         for (Element jobCard : jobCards) {
