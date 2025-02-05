@@ -28,14 +28,14 @@ public class Extractor {
 
         Scraper scraper = new Scraper();
         String urlCompanyN = "https://recruit.navercorp.com/rcrt/list.do?lang=ko";
-        String urlCompanyD1_B = "https://www.doodlin.co.kr/career#3276397a-a988-4ca5-ab47-9aa05e9cce30";
-        String urlCompanyD2_A = "https://teamdoeat.career.greetinghr.com/home#323ea93b-ce52-45c9-bbbf-0b85ad135508";
+        String urlCompanyD1_B = "https://www.doodlin.co.kr";
+        String urlCompanyD2_A = "https://teamdoeat.career.greetinghr.com";
 
         Extractor extractor = new Extractor(new CssSelector(), new JobDataExtractorSelenium());
 
         try {
-            Document doc = scraper.fetchHtml(urlCompanyD2_A);
-            extractor.extractGreeting2(doc, urlCompanyD2_A).forEach(System.out::println);
+            Document doc = scraper.fetchHtml(urlCompanyD1_B);
+            extractor.extractGreeting2(doc, urlCompanyD1_B).forEach(System.out::println);
         } catch (IOException e) {
             System.err.println("fail: " + e.getMessage());
         }
@@ -231,14 +231,15 @@ public class Extractor {
     private List<JobPostingEntity> handleJobCards2(Elements e, Map<String, List<String>> criteriaList) {
 
         List<JobPostingEntity> list = new ArrayList<>();
-        Elements jobCards = e.select("div.sc-9b56f69e-0.jlntFl");
+        Elements links = e.select("a");
+//        Elements jobCards = e.select("div.sc-9b56f69e-0.jlntFl");
 
-        for (Element jobCard : jobCards) {
+        for (Element link : links) {
+            String hrefValue = link.attr("href");
+            String title = link.select("span.sc-86b147bc-0.gIOkaZ.sc-d200d649-1.dKCwbm").text();
+            Elements details = link.select("span.sc-be6466ed-3.bDOHei");
 
-            String title = jobCard.select("span.sc-86b147bc-0.gIOkaZ.sc-d200d649-1.dKCwbm").text();
-            Elements details = jobCard.select("span.sc-be6466ed-3.bDOHei");
-
-            list.add(Convertor.convertGreeting(title, details, criteriaList));
+            list.add(Convertor.convertGreeting(hrefValue, title, details, criteriaList));
 
         }
 
