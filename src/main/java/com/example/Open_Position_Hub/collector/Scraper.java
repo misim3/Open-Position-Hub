@@ -5,7 +5,9 @@ import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.springframework.stereotype.Component;
 
+@Component
 public class Scraper {
 
     public static void main(String[] args) {
