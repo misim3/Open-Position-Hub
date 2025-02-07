@@ -20,7 +20,7 @@ class ManagerTest {
         Extractor extractor = new Extractor(new CssSelector(), new JobDataExtractorSelenium());
         Manager manager = new Manager(scraper, extractor, jobPostingRepository);
 
-        manager.process(url);
+//        manager.process(url);
 
         List<JobPostingEntity> jobPostingEntities = jobPostingRepository.findAll();
         jobPostingEntities.forEach(System.out::println);
@@ -33,7 +33,7 @@ class ManagerTest {
         Extractor extractor = new Extractor(new CssSelector(), new JobDataExtractorSelenium());
         Manager manager = new Manager(scraper, extractor, jobPostingRepository);
 
-        manager.process(url);
+//        manager.process(url);
 
         List<JobPostingEntity> jobPostingEntities = jobPostingRepository.findAll();
         jobPostingEntities.forEach(System.out::println);

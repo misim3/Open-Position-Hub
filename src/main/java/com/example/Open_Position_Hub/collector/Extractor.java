@@ -11,11 +11,13 @@ import java.util.Map;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.springframework.stereotype.Component;
 
+@Component
 public class Extractor {
 
-    private CssSelector selector;
-    private JobDataExtractorSelenium jobDataExtractorSelenium;
+    private final CssSelector selector;
+    private final JobDataExtractorSelenium jobDataExtractorSelenium;
 
     public Extractor(CssSelector selector, JobDataExtractorSelenium jobDataExtractorSelenium) {
         this.selector = selector;
@@ -203,7 +205,8 @@ public class Extractor {
     }
 
     private List<JobPostingEntity> handleListViewB2(Elements listViewB) {
-        Map<String, List<String>> criteria = handleSideBar2(listViewB.select("div.sc-4384c63b-0.dpoYEo"));
+        Map<String, List<String>> criteria = handleSideBar2(
+            listViewB.select("div.sc-4384c63b-0.dpoYEo"));
         return handleJobCards2(listViewB.select("div.sc-9b56f69e-0.enoHnQ"), criteria);
     }
 
@@ -228,11 +231,11 @@ public class Extractor {
         return map;
     }
 
-    private List<JobPostingEntity> handleJobCards2(Elements e, Map<String, List<String>> criteriaList) {
+    private List<JobPostingEntity> handleJobCards2(Elements e,
+        Map<String, List<String>> criteriaList) {
 
         List<JobPostingEntity> list = new ArrayList<>();
         Elements links = e.select("a");
-//        Elements jobCards = e.select("div.sc-9b56f69e-0.jlntFl");
 
         for (Element link : links) {
             String hrefValue = link.attr("href");

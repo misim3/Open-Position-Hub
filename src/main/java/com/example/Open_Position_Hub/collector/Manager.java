@@ -6,7 +6,10 @@ import java.io.IOException;
 import java.util.List;
 import org.jsoup.nodes.Document;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
 
+@Component
 public class Manager {
 
     private final Scraper scraper;
@@ -19,9 +22,12 @@ public class Manager {
         this.jobPostingRepository = jobPostingRepository;
     }
 
-    public void process(String url) {
-        List<JobPostingEntity> jobPostingEntities = processJobScraping(url);
+    @Scheduled(fixedRate = 86400000) // 24시간 마다 실행
+    public void process() {
+        System.out.println("Processing...");
+        List<JobPostingEntity> jobPostingEntities = processJobScraping("https://teamdoeat.career.greetinghr.com");
         saveJobPostings(jobPostingEntities);
+        System.out.println("Done!");
     }
 
     private List<JobPostingEntity> processJobScraping(String url) {
