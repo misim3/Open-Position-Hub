@@ -2,7 +2,6 @@ package com.example.Open_Position_Hub.collector;
 
 import com.example.Open_Position_Hub.db.CompanyEntity;
 import com.example.Open_Position_Hub.db.CompanyRepository;
-import com.example.Open_Position_Hub.db.JobPostingEntity;
 import com.example.Open_Position_Hub.db.JobPostingRepository;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,7 +25,7 @@ class ManagerTest {
     void setUp() {
         jobPostingRepository.deleteAll();
         companyRepository.deleteAll();
-}
+    }
 
     private CompanyEntity doeat() {
         return new CompanyEntity("doeat", "greeting", "https://teamdoeat.career.greetinghr.com");
