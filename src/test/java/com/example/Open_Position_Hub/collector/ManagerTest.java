@@ -1,6 +1,11 @@
 package com.example.Open_Position_Hub.collector;
 
+import com.example.Open_Position_Hub.db.CompanyEntity;
+import com.example.Open_Position_Hub.db.CompanyRepository;
 import com.example.Open_Position_Hub.db.JobPostingRepository;
+import java.util.List;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -10,29 +15,34 @@ class ManagerTest {
     @Autowired
     private JobPostingRepository jobPostingRepository;
 
-//    @Test
-//    void process_greeting_typeA() {
-//        String url = "https://teamdoeat.career.greetinghr.com";
-//        Scraper scraper = new Scraper();
-//        Extractor extractor = new Extractor(new CssSelector(), new JobDataExtractorSelenium());
-//        Manager manager = new Manager(scraper, extractor, jobPostingRepository);
-//
-//        manager.process(url);
-//
-//        List<JobPostingEntity> jobPostingEntities = jobPostingRepository.findAll();
-//        jobPostingEntities.forEach(System.out::println);
-//    }
-//
-//    @Test
-//    void process_greeting_typeB() {
-//        String url = "https://www.doodlin.co.kr";
-//        Scraper scraper = new Scraper();
-//        Extractor extractor = new Extractor(new CssSelector(), new JobDataExtractorSelenium());
-//        Manager manager = new Manager(scraper, extractor, jobPostingRepository);
-//
-//        manager.process(url);
-//
-//        List<JobPostingEntity> jobPostingEntities = jobPostingRepository.findAll();
-//        jobPostingEntities.forEach(System.out::println);
-//    }
+    @Autowired
+    private CompanyRepository companyRepository;
+
+    @Autowired
+    private Manager manager;
+
+    @BeforeEach
+    void setUp() {
+        jobPostingRepository.deleteAll();
+        companyRepository.deleteAll();
+    }
+
+    private CompanyEntity doeat() {
+        return new CompanyEntity("doeat", "greeting", "https://teamdoeat.career.greetinghr.com");
+    }
+
+    private CompanyEntity doodlin() {
+        return new CompanyEntity("doodlin", "greeting", "https://www.doodlin.co.kr");
+    }
+
+    @Test
+    void test() {
+
+        companyRepository.saveAll(List.of(doeat(), doodlin()));
+
+        manager.process();
+
+        jobPostingRepository.findAll().forEach(System.out::println);
+
+    }
 }
