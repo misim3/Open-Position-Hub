@@ -11,17 +11,21 @@ public class JobPostingEntity extends BaseEntity {
     private String employmentType;
     private String location;
     private String detailUrl;
+    private Long companyId;
 
-    protected JobPostingEntity() {}
+    protected JobPostingEntity() {
+    }
 
-    public JobPostingEntity(String title, String category, String experienceLevel, String employmentType,
-        String location, String detailUrl) {
+    public JobPostingEntity(String title, String category, String experienceLevel,
+        String employmentType,
+        String location, String detailUrl, Long companyId) {
         this.title = title;
         this.category = category;
         this.experienceLevel = experienceLevel;
         this.employmentType = employmentType;
         this.location = location;
         this.detailUrl = detailUrl;
+        this.companyId = companyId;
     }
 
     public String getTitle() {
@@ -48,10 +52,20 @@ public class JobPostingEntity extends BaseEntity {
         return detailUrl;
     }
 
+    public Long getCompanyId() {
+        return companyId;
+    }
+
     @Override
     public String toString() {
-        return "JobPosting{" + "title='" + title + '\'' + ", category='" + category + '\''
-            + ", experienceLevel='" + experienceLevel + '\'' + ", employmentType='" + employmentType
-            + '\'' + ", location='" + location + '\'' + ", detailUrl='" + detailUrl + '\'' + '}';
+        return "JobPostingEntity{" +
+            "title='" + title + '\'' +
+            ", category='" + category + '\'' +
+            ", experienceLevel='" + experienceLevel + '\'' +
+            ", employmentType='" + employmentType + '\'' +
+            ", location='" + location + '\'' +
+            ", detailUrl='" + detailUrl + '\'' +
+            ", companyId=" + companyId +
+            '}';
     }
 }

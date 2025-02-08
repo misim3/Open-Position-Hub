@@ -9,7 +9,8 @@ import org.jsoup.select.Elements;
 
 public class Convertor {
 
-    public static JobPostingEntity convertGreeting(String hrefValue, String title, Elements details, Map<String, List<String>> criteriaList) {
+    public static JobPostingEntity convertGreeting(String hrefValue, String title, Elements details,
+        Map<String, List<String>> criteriaList, Long companyId) {
 
         String category = "";
         String experienceLevel = "";
@@ -41,7 +42,8 @@ public class Convertor {
             }
         }
 
-        return new JobPostingEntity(title, category, experienceLevel, employmentType, location, hrefValue);
+        return new JobPostingEntity(title, category, experienceLevel, employmentType, location,
+            hrefValue, companyId);
 
     }
 }
