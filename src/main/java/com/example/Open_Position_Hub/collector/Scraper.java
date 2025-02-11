@@ -41,8 +41,6 @@ public class Scraper {
             int statusCode = e.getStatusCode();
             if (statusCode == 404) {
                 System.err.println("404 Not Found - URL might be deleted or moved: " + url);
-            } else if (statusCode == 301 || statusCode == 302) {
-                System.err.println("Redirect detected - URL might have changed: " + url);
             } else {
                 System.err.println("HTTP Error " + statusCode + ": " + e.getMessage());
             }
