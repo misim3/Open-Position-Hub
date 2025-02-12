@@ -3,6 +3,7 @@ package com.example.Open_Position_Hub.collector;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.MalformedURLException;
+import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import org.jsoup.HttpStatusException;
@@ -47,6 +48,10 @@ public class Scraper {
             } else {
                 System.err.println("HTTP Error " + statusCode + ": " + e.getMessage());
             }
+            throw e;
+
+        } catch (SocketTimeoutException e) {
+            System.err.println("Connection timed out while accessing: " + url);
             throw e;
 
         } catch (UnknownHostException e) {
