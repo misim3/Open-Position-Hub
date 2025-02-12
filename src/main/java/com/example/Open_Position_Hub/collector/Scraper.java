@@ -34,6 +34,7 @@ public class Scraper {
 
         try {
             return Jsoup.connect(url)
+                .followRedirects(false)
                 .timeout(5000)
                 .get();
 
