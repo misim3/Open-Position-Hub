@@ -1,11 +1,9 @@
 package com.example.Open_Position_Hub.collector;
 
 import java.io.IOException;
-import java.io.PrintStream;
 import java.net.MalformedURLException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
-import java.nio.charset.StandardCharsets;
 import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -91,7 +89,8 @@ public class Scraper {
             throw e;
 
         } catch (IOException e) {
-            System.err.println("General IO Exception occurred while fetching HTML: " + e.getMessage());
+            System.err.println(
+                "General IO Exception occurred while fetching HTML: " + e.getMessage());
             throw e;
         }
     }
