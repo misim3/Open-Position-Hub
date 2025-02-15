@@ -1,11 +1,9 @@
 package com.example.Open_Position_Hub.collector;
 
 import java.io.IOException;
-import java.io.PrintStream;
 import java.net.MalformedURLException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
-import java.nio.charset.StandardCharsets;
 import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -13,23 +11,6 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class Scraper {
-
-    public static void main(String[] args) {
-
-        System.setOut(new PrintStream(System.out, true, StandardCharsets.UTF_8));
-
-        Scraper scraper = new Scraper();
-        String url = "https://recruit.navercorp.com/rcrt/list.do?lang=ko";
-
-        try {
-            Document doc = scraper.fetchHtml(url);
-            System.out.println("success");
-            System.out.println(doc.html());
-        } catch (IOException e) {
-            System.err.println("fail: " + e.getMessage());
-        }
-
-    }
 
     public Document fetchHtml(String url) throws IOException {
 
@@ -41,12 +22,57 @@ public class Scraper {
 
         } catch (HttpStatusException e) {
             int statusCode = e.getStatusCode();
-            if (statusCode == 404) {
-                System.err.println("404 Not Found - URL might be deleted or moved: " + url);
-            } else if (statusCode == 301 || statusCode == 302) {
-                System.err.println("Redirect detected - URL might have changed: " + url);
-            } else {
-                System.err.println("HTTP Error " + statusCode + ": " + e.getMessage());
+            switch (statusCode) {
+                case 301, 308:
+                    System.err.println("301/308 Permanent Redirect: " + url);
+                    break;
+
+                case 302, 307:
+                    System.err.println("302/307 Temporary Redirect: " + url);
+                    break;
+
+                case 303:
+                    System.err.println("303 See Other: " + url);
+                    break;
+
+                case 400:
+                    System.err.println("400 Bad Request: Check request format.");
+                    break;
+
+                case 401:
+                    System.err.println("401 Unauthorized: Authentication required.");
+                    break;
+
+                case 403:
+                    System.err.println("403 Forbidden: Access denied.");
+                    break;
+
+                case 404:
+                    System.err.println("404 Not Found: URL invalidated in database.");
+                    break;
+
+                case 405:
+                    System.err.println("405 Method Not Allowed: Check HTTP method.");
+                    break;
+
+                case 500:
+                    System.err.println("500 Internal Server Error");
+                    break;
+
+                case 502:
+                    System.err.println("502 Bad Gateway");
+                    break;
+
+                case 503:
+                    System.err.println("503 Service Unavailable");
+                    break;
+
+                case 504:
+                    System.err.println("504 Gateway Timeout");
+                    break;
+
+                default:
+                    System.err.println("Unhandled HTTP status code: " + statusCode);
             }
             throw e;
 
@@ -63,7 +89,8 @@ public class Scraper {
             throw e;
 
         } catch (IOException e) {
-            System.err.println("General IO Exception occurred while fetching HTML: " + e.getMessage());
+            System.err.println(
+                "General IO Exception occurred while fetching HTML: " + e.getMessage());
             throw e;
         }
     }
