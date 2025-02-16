@@ -7,10 +7,14 @@ import java.net.UnknownHostException;
 import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 @Component
 public class Scraper {
+
+    private static final Logger logger = LoggerFactory.getLogger(Scraper.class);
 
     public Document fetchHtml(String url) throws IOException {
 
@@ -23,74 +27,39 @@ public class Scraper {
         } catch (HttpStatusException e) {
             int statusCode = e.getStatusCode();
             switch (statusCode) {
-                case 301, 308:
-                    System.err.println("301/308 Permanent Redirect: " + url);
-                    break;
+                case 301, 308 -> logger.warn("[Scraper] 301/308 Permanent Redirect detected - URL: {}", url);
+                case 302, 307 -> logger.warn("[Scraper] 302/307 Temporary Redirect detected - URL: {}", url);
+                case 303 -> logger.warn("[Scraper] 303 See Other - URL: {}", url);
 
-                case 302, 307:
-                    System.err.println("302/307 Temporary Redirect: " + url);
-                    break;
+                case 400 -> logger.warn("[Scraper] 400 Bad Request - Check URL formatting. URL: {}", url);
+                case 401 -> logger.error("[Scraper] 401 Unauthorized - Authentication required for URL: {}", url);
+                case 403 -> logger.error("[Scraper] 403 Forbidden - Access denied to URL: {}", url);
+                case 404 -> logger.warn("[Scraper] 404 Not Found - URL might be outdated: {}", url);
+                case 405 -> logger.warn("[Scraper] 405 Method Not Allowed - Check HTTP method for URL: {}", url);
 
-                case 303:
-                    System.err.println("303 See Other: " + url);
-                    break;
+                case 500 -> logger.error("[Scraper] 500 Internal Server Error - URL: {}", url);
+                case 502 -> logger.error("[Scraper] 502 Bad Gateway - Possible upstream server issue. URL: {}", url);
+                case 503 -> logger.warn("[Scraper] 503 Service Unavailable - Temporary server issue. URL: {}", url);
+                case 504 -> logger.error("[Scraper] 504 Gateway Timeout - Server response timed out. URL: {}", url);
 
-                case 400:
-                    System.err.println("400 Bad Request: Check request format.");
-                    break;
-
-                case 401:
-                    System.err.println("401 Unauthorized: Authentication required.");
-                    break;
-
-                case 403:
-                    System.err.println("403 Forbidden: Access denied.");
-                    break;
-
-                case 404:
-                    System.err.println("404 Not Found: URL invalidated in database.");
-                    break;
-
-                case 405:
-                    System.err.println("405 Method Not Allowed: Check HTTP method.");
-                    break;
-
-                case 500:
-                    System.err.println("500 Internal Server Error");
-                    break;
-
-                case 502:
-                    System.err.println("502 Bad Gateway");
-                    break;
-
-                case 503:
-                    System.err.println("503 Service Unavailable");
-                    break;
-
-                case 504:
-                    System.err.println("504 Gateway Timeout");
-                    break;
-
-                default:
-                    System.err.println("Unhandled HTTP status code: " + statusCode);
+                default -> logger.error("[Scraper] Unhandled HTTP status code: {} for URL: {}", statusCode, url);
             }
             throw e;
 
         } catch (SocketTimeoutException e) {
-            System.err.println("Connection timed out while accessing: " + url);
+            logger.error("Connection timed out while accessing: {}", url);
             throw e;
 
         } catch (UnknownHostException e) {
-            System.err.println("Unknown host - Possible domain change or deletion: " + url);
+            logger.error("Unknown host - Possible domain change or deletion: {}", url);
             throw e;
 
         } catch (MalformedURLException e) {
-            System.err.println("Malformed URL - Check the URL format: " + url);
+            logger.error("Malformed URL - Check the URL format: {}", url);
             throw e;
 
         } catch (IOException e) {
-            System.err.println(
-                "General IO Exception occurred while fetching HTML: " + e.getMessage());
+            logger.error("General IO Exception occurred while fetching HTML: {} for URL: {}", e.getMessage(), url);
             throw e;
         }
     }

@@ -8,11 +8,14 @@ import java.util.Map;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 @Component
 public class Extractor {
 
+    private static final Logger logger = LoggerFactory.getLogger(Extractor.class);
     private final JobDataExtractorSelenium jobDataExtractorSelenium;
 
     public Extractor(JobDataExtractorSelenium jobDataExtractorSelenium) {
@@ -31,21 +34,19 @@ public class Extractor {
         } else if (!listViewB.isEmpty()) {
             list = handleListViewB2(listViewB, companyId);
         } else {
-            System.err.println("HTML structure changed: Unable to find elements for URL: " + url);
+            logger.error("HTML structure changed: Unable to find elements for URL: {}", url);
         }
 
         return list;
     }
 
-    private List<JobPostingEntity> handleListViewA2(Elements listViewA, String url,
-        Long companyId) {
+    private List<JobPostingEntity> handleListViewA2(Elements listViewA, String url, Long companyId) {
         Map<String, List<String>> criteria = jobDataExtractorSelenium.handleFilterBar(url);
         return handleJobCards2(listViewA.select("div.sc-9b56f69e-0.enoHnQ"), criteria, companyId);
     }
 
     private List<JobPostingEntity> handleListViewB2(Elements listViewB, Long companyId) {
-        Map<String, List<String>> criteria = handleSideBar2(
-            listViewB.select("div.sc-4384c63b-0.dpoYEo"));
+        Map<String, List<String>> criteria = handleSideBar2(listViewB.select("div.sc-4384c63b-0.dpoYEo"));
         return handleJobCards2(listViewB.select("div.sc-9b56f69e-0.enoHnQ"), criteria, companyId);
     }
 
@@ -70,8 +71,7 @@ public class Extractor {
         return map;
     }
 
-    private List<JobPostingEntity> handleJobCards2(Elements e,
-        Map<String, List<String>> criteriaList, Long companyId) {
+    private List<JobPostingEntity> handleJobCards2(Elements e, Map<String, List<String>> criteriaList, Long companyId) {
 
         List<JobPostingEntity> list = new ArrayList<>();
         Elements links = e.select("a");
