@@ -31,7 +31,6 @@ public class JobDataExtractorSelenium {
         String driverPath = System.setProperty("webdriver.chrome.driver", "C:\\Users\\sim00\\Downloads\\chromedriver-win64\\chromedriver-win64\\chromedriver.exe");
         if (driverPath == null || driverPath.isBlank()) {
             logger.error("ChromeDriver path is not set. Please configure the system property: 'webdriver.chrome.driver'.");
-            throw new IllegalStateException("ChromeDriver path is not set.");
         }
 
         // Chrome 옵션 설정
