@@ -31,7 +31,7 @@ public class Extractor {
         } else if (!listViewB.isEmpty()) {
             list = handleListViewB2(listViewB, companyId);
         } else {
-            System.out.println("fail to extract greeting");
+            System.err.println("HTML structure changed: Unable to find elements for URL: " + url);
         }
 
         return list;
