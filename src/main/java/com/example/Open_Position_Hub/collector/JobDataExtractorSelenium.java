@@ -6,24 +6,33 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import org.openqa.selenium.By;
+import org.openqa.selenium.NoSuchElementException;
+import org.openqa.selenium.StaleElementReferenceException;
+import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 @Component
 public class JobDataExtractorSelenium {
 
-    public JobDataExtractorSelenium() {
-    }
+    private static final Logger logger = LoggerFactory.getLogger(JobDataExtractorSelenium.class);
 
     public Map<String, List<String>> handleFilterBar(String url) {
 
         // ChromeDriver 경로 설정 (본인의 환경에 맞게 수정)
-        System.setProperty("webdriver.chrome.driver", "C:\\Users\\sim00\\Downloads\\chromedriver-win64\\chromedriver-win64\\chromedriver.exe");
+        String driverPath = System.setProperty("webdriver.chrome.driver", "C:\\Users\\sim00\\Downloads\\chromedriver-win64\\chromedriver-win64\\chromedriver.exe");
+        if (driverPath == null || driverPath.isBlank()) {
+            logger.error("ChromeDriver path is not set. Please configure the system property: 'webdriver.chrome.driver'.");
+            throw new IllegalStateException("ChromeDriver path is not set.");
+        }
 
         // Chrome 옵션 설정
         ChromeOptions options = new ChromeOptions();
@@ -42,15 +51,20 @@ public class JobDataExtractorSelenium {
             driver.get(url);
 
             // 2. 필터바의 선택지 가져오기 (업데이트된 방식)
-            System.out.println("필터 옵션 가져오는 중...");
             filterOptions = getFilterOptions(driver, wait);
 
-        } catch (Exception e) {
-            e.fillInStackTrace();
-        } finally {
-            driver.quit();  // WebDriver 종료
-        }
+        } catch (TimeoutException e) {
+            logger.warn("TimeoutException: Page loading timeout exceeded. URL: {}", url, e);
 
+        } catch (WebDriverException e) {
+            logger.error("WebDriverException: Failed to execute WebDriver - URL: {}", url, e);
+
+        } catch (Exception e) {
+            logger.error("Unexpected exception occurred - URL: {}", url, e);
+
+        } finally {
+            driver.quit();
+        }
         return filterOptions;
     }
 
@@ -62,8 +76,7 @@ public class JobDataExtractorSelenium {
 
         try {
             // 필터 항목 추출
-            List<WebElement> filters = driver.findElements(
-                By.cssSelector("span.sc-86b147bc-0.ghZIoe"));
+            List<WebElement> filters = driver.findElements(By.cssSelector("span.sc-86b147bc-0.ghZIoe"));
 
             for (WebElement filter : filters) {
 
@@ -72,23 +85,32 @@ public class JobDataExtractorSelenium {
 
                 List<String> options = new ArrayList<>();
 
-                filter.click(); // 드롭다운 열기
-                Thread.sleep(500); // 짧은 대기 (드롭다운 포털 생성 시간)
+                try {
+                    filter.click(); // 드롭다운 열기
 
-                // 'dropdown-portal'이 생성될 때까지 대기
-                WebElement dropdownPortal = wait.until(ExpectedConditions.presenceOfElementLocated(By.id("dropdown-portal")));
+                    // 'dropdown-portal'이 생성될 때까지 대기
+                    WebElement dropdownPortal = wait.until(ExpectedConditions.presenceOfElementLocated(By.id("dropdown-portal")));
 
-                // 필터 옵션 가져오기
-                List<WebElement> optionElements = dropdownPortal.findElements(By.cssSelector("span.sc-86b147bc-0.ONaOy"));
-                for (WebElement option : optionElements) {
-                    options.add(option.getText());
+                    // 필터 옵션 가져오기
+                    List<WebElement> optionElements = dropdownPortal.findElements(By.cssSelector("span.sc-86b147bc-0.ONaOy"));
+
+                    for (WebElement option : optionElements) {
+                        options.add(option.getText());
+                    }
+
+                } catch (TimeoutException e) {
+                    logger.warn("TimeoutException: Failed to load the dropdown portal for '{}' filter.", name, e);
+                } catch (NoSuchElementException e) {
+                    logger.error("NoSuchElementException: Failed to find options for '{}' filter.", name, e);
+                } catch (StaleElementReferenceException e) {
+                    logger.error("StaleElementReferenceException: Failed to reference options for '{}' filter.", name, e);
                 }
 
                 map.put(name, options);
             }
 
         } catch (Exception e) {
-            System.out.println("필터의 선택지들을 가져오지 못했습니다.");
+            logger.error("Unknown error occurred during filter option extraction.");
         }
         return map;
     }
