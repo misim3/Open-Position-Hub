@@ -4,9 +4,11 @@ import com.example.Open_Position_Hub.db.CompanyEntity;
 import com.example.Open_Position_Hub.db.CompanyRepository;
 import com.example.Open_Position_Hub.db.JobPostingEntity;
 import com.example.Open_Position_Hub.db.JobPostingRepository;
-import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 import org.jsoup.nodes.Document;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -14,6 +16,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class Manager {
 
+    private static final Logger logger = LoggerFactory.getLogger(Manager.class);
     private final Scraper scraper;
     private final Extractor extractor;
     private final JobPostingRepository jobPostingRepository;
@@ -38,23 +41,25 @@ public class Manager {
 
     private List<JobPostingEntity> processJobScraping(CompanyEntity company) {
 
-        try {
-            Document doc = scraper.fetchHtml(company.getRecruitmentUrl());
+        Optional<Document> doc = scraper.fetchHtml(company.getRecruitmentUrl());
+        if (doc.isPresent()) {
             if (company.getRecruitmentPlatform().equals("greeting")) {
-                return extractor.extractGreeting2(doc, company.getRecruitmentUrl(),
+                return extractor.extractGreeting2(doc.get(), company.getRecruitmentUrl(),
                     company.getId());
             } else {
-                System.out.println("this recruitment platform(" + company.getRecruitmentPlatform()
-                    + ") is not supported now.");
+                logger.warn("Unsupported platform: {}", company.getRecruitmentPlatform());
             }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
         }
 
         return List.of();
     }
 
     private void saveJobPostings(List<JobPostingEntity> jobPostingEntities) {
+
+        if (jobPostingEntities.isEmpty()) {
+            return;
+        }
+
         jobPostingRepository.saveAll(jobPostingEntities);
     }
 }

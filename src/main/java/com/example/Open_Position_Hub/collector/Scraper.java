@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
+import java.util.Optional;
 import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -16,13 +17,16 @@ public class Scraper {
 
     private static final Logger logger = LoggerFactory.getLogger(Scraper.class);
 
-    public Document fetchHtml(String url) throws IOException {
+    public Optional<Document> fetchHtml(String url) {
 
         try {
-            return Jsoup.connect(url)
+
+            Document doc =  Jsoup.connect(url)
                 .followRedirects(false)
                 .timeout(5000)
                 .get();
+
+            return Optional.of(doc);
 
         } catch (HttpStatusException e) {
             int statusCode = e.getStatusCode();
@@ -44,23 +48,20 @@ public class Scraper {
 
                 default -> logger.error("[Scraper] Unhandled HTTP status code: {} for URL: {}", statusCode, url);
             }
-            throw e;
 
         } catch (SocketTimeoutException e) {
             logger.error("Connection timed out while accessing: {}", url);
-            throw e;
 
         } catch (UnknownHostException e) {
             logger.error("Unknown host - Possible domain change or deletion: {}", url);
-            throw e;
 
         } catch (MalformedURLException e) {
             logger.error("Malformed URL - Check the URL format: {}", url);
-            throw e;
 
         } catch (IOException e) {
             logger.error("General IO Exception occurred while fetching HTML: {} for URL: {}", e.getMessage(), url);
-            throw e;
         }
+
+        return Optional.empty();
     }
 }
