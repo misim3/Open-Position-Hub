@@ -49,4 +49,14 @@ public class JobPostingService {
         }
         return jobPostings;
     }
+
+    public List<JobPosting> getJobPostingsByTitleAndCompanyName(String title, String companyName) {
+        List<JobPosting> jobPostings = new ArrayList<>();
+        Long companyId = companyRepository.findByName(companyName);
+        List<JobPostingEntity> jobPostingEntityList = jobPostingRepository.findByTitleAndCompanyId(title, companyId);
+        for (JobPostingEntity jobPostingEntity : jobPostingEntityList) {
+            jobPostings.add(new JobPosting(companyName, jobPostingEntity.getTitle(), jobPostingEntity.getExperienceLevel(), jobPostingEntity.getEmploymentType(), jobPostingEntity.getLocation(), jobPostingEntity.getDetailUrl()));
+        }
+        return jobPostings;
+    }
 }

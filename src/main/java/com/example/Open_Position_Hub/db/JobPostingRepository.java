@@ -8,4 +8,6 @@ public interface JobPostingRepository extends JpaRepository<JobPostingEntity, Lo
     List<JobPostingEntity> findByCompanyId(Long companyId);
 
     List<JobPostingEntity> findByTitle(String title);
+
+    List<JobPostingEntity> findByTitleAndCompanyId(String title, Long companyId);
 }
