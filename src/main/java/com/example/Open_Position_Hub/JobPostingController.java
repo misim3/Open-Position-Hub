@@ -33,9 +33,17 @@ public class JobPostingController {
     }
 
     @GetMapping("/jobs")
-    public ResponseEntity<List<JobPosting>> getJobPostingsByCompany(@RequestParam String companyName) {
+    public ResponseEntity<List<JobPosting>> getJobPostingsByCompanyName(@RequestParam String companyName) {
 
         List<JobPosting> jobPostings = jobPostingService.getJobPostingsByCompanyName(companyName);
+
+        return new ResponseEntity<>(jobPostings, HttpStatus.OK);
+    }
+
+    @GetMapping("/jobs")
+    public ResponseEntity<List<JobPosting>> getJobPostingsByTitleAndCompanyName(@RequestParam String title, @RequestParam String companyName) {
+
+        List<JobPosting> jobPostings = jobPostingService.getJobPostingsByTitleAndCompanyName(title, companyName);
 
         return new ResponseEntity<>(jobPostings, HttpStatus.OK);
     }
