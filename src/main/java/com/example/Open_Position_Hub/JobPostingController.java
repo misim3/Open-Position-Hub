@@ -1,6 +1,8 @@
 package com.example.Open_Position_Hub;
 
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,33 +19,37 @@ public class JobPostingController {
     }
 
     @GetMapping("/jobs")
-    public ResponseEntity<List<JobPosting>> getJobPostings() {
+    public ResponseEntity<Page<JobPosting>> getJobPostings(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
 
-        List<JobPosting> jobPostings = jobPostingService.getAllJobPostings();
-
-        return new ResponseEntity<>(jobPostings, HttpStatus.OK);
-    }
-
-    @GetMapping("/jobs")
-    public ResponseEntity<List<JobPosting>> getJobPostingsByTitle(@RequestParam String title) {
-
-        List<JobPosting> jobPostings = jobPostingService.getJobPostingsByTitle(title);
+        Pageable pageable = PageRequest.of(page, size);
+        Page<JobPosting> jobPostings = jobPostingService.getAllJobPostings(pageable);
 
         return new ResponseEntity<>(jobPostings, HttpStatus.OK);
     }
 
     @GetMapping("/jobs")
-    public ResponseEntity<List<JobPosting>> getJobPostingsByCompanyName(@RequestParam String companyName) {
+    public ResponseEntity<Page<JobPosting>> getJobPostingsByTitle(@RequestParam String title, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
 
-        List<JobPosting> jobPostings = jobPostingService.getJobPostingsByCompanyName(companyName);
+        Pageable pageable = PageRequest.of(page, size);
+        Page<JobPosting> jobPostings = jobPostingService.getJobPostingsByTitle(title, pageable);
 
         return new ResponseEntity<>(jobPostings, HttpStatus.OK);
     }
 
     @GetMapping("/jobs")
-    public ResponseEntity<List<JobPosting>> getJobPostingsByTitleAndCompanyName(@RequestParam String title, @RequestParam String companyName) {
+    public ResponseEntity<Page<JobPosting>> getJobPostingsByCompanyName(@RequestParam String companyName, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
 
-        List<JobPosting> jobPostings = jobPostingService.getJobPostingsByTitleAndCompanyName(title, companyName);
+        Pageable pageable = PageRequest.of(page, size);
+        Page<JobPosting> jobPostings = jobPostingService.getJobPostingsByCompanyName(companyName, pageable);
+
+        return new ResponseEntity<>(jobPostings, HttpStatus.OK);
+    }
+
+    @GetMapping("/jobs")
+    public ResponseEntity<Page<JobPosting>> getJobPostingsByTitleAndCompanyName(@RequestParam String title, @RequestParam String companyName, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<JobPosting> jobPostings = jobPostingService.getJobPostingsByTitleAndCompanyName(title, companyName, pageable);
 
         return new ResponseEntity<>(jobPostings, HttpStatus.OK);
     }
