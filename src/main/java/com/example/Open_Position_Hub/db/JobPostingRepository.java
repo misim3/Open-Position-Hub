@@ -1,13 +1,14 @@
 package com.example.Open_Position_Hub.db;
 
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface JobPostingRepository extends JpaRepository<JobPostingEntity, Long> {
 
-    List<JobPostingEntity> findByCompanyId(Long companyId);
+    Page<JobPostingEntity> findByCompanyId(Long companyId, Pageable pageable);
 
-    List<JobPostingEntity> findByTitle(String title);
+    Page<JobPostingEntity> findByTitle(String title, Pageable pageable);
 
-    List<JobPostingEntity> findByTitleAndCompanyId(String title, Long companyId);
+    Page<JobPostingEntity> findByTitleAndCompanyId(String title, Long companyId, Pageable pageable);
 }
