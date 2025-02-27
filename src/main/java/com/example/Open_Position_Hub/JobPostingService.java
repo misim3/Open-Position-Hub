@@ -5,6 +5,8 @@ import com.example.Open_Position_Hub.db.CompanyRepository;
 import com.example.Open_Position_Hub.db.JobPostingEntity;
 import com.example.Open_Position_Hub.db.JobPostingRepository;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -22,6 +24,7 @@ public class JobPostingService {
     }
 
     public Page<JobPosting> getAllJobPostings(Pageable pageable) {
+
         Page<JobPostingEntity> jobPostingEntityList = jobPostingRepository.findAll(pageable);
 
         List<JobPosting> jobPostings = jobPostingEntityList.get()
@@ -43,14 +46,16 @@ public class JobPostingService {
         return new PageImpl<>(jobPostings, pageable, jobPostingEntityList.getTotalElements());
     }
 
-    public Page<JobPosting> getJobPostingsByCompanyName(String companyName, Pageable pageable) {
+    public Page<JobPosting> getJobPostingsByCompanyNames(List<String> companyNames, Pageable pageable) {
 
-        Long companyId = companyRepository.findByName(companyName);
-        Page<JobPostingEntity> jobPostingEntityList = jobPostingRepository.findByCompanyId(companyId, pageable);
+        Map<Long, String> companyMap = companyRepository.findByNameIn(companyNames).stream()
+            .collect(Collectors.toMap(CompanyEntity::getId, CompanyEntity::getName));
+
+        Page<JobPostingEntity> jobPostingEntityList = jobPostingRepository.findByCompanyIdIn(companyMap.keySet(), pageable);
 
         List<JobPosting> jobPostings = jobPostingEntityList.get()
             .map(job -> new JobPosting(
-                companyName,
+                companyMap.get(job.getCompanyId()),
                 job.getTitle(),
                 job.getExperienceLevel(),
                 job.getEmploymentType(),
@@ -62,14 +67,17 @@ public class JobPostingService {
         return new PageImpl<>(jobPostings, pageable, jobPostingEntityList.getTotalElements());
     }
 
-    public Page<JobPosting> getJobPostingsByTitle(String title, Pageable pageable) {
+    public Page<JobPosting> getJobPostingsByTitles(List<String> titles, Pageable pageable) {
 
-        Page<JobPostingEntity> jobPostingEntityList = jobPostingRepository.findByTitle(title, pageable);
+        Page<JobPostingEntity> jobPostingEntityList = jobPostingRepository.findByTitleIn(titles, pageable);
+
         List<JobPosting> jobPostings = jobPostingEntityList.get()
             .map(job -> {
+
                 String companyName = companyRepository.findById(job.getCompanyId())
                     .map(CompanyEntity::getName)
                     .orElseThrow(() -> new RuntimeException("Not Found Company By CompanyId while getJobPostingsByTitle."));
+
                 return new JobPosting(
                     companyName,
                     job.getTitle(),
@@ -77,6 +85,7 @@ public class JobPostingService {
                     job.getEmploymentType(),
                     job.getLocation(),
                     job.getDetailUrl()
+
                 );
             })
             .toList();
@@ -84,13 +93,16 @@ public class JobPostingService {
         return new PageImpl<>(jobPostings, pageable, jobPostingEntityList.getTotalElements());
     }
 
-    public Page<JobPosting> getJobPostingsByTitleAndCompanyName(String title, String companyName, Pageable pageable) {
+    public Page<JobPosting> getJobPostingsByTitlesAndCompanyNames(List<String> titles, List<String> companyNames, Pageable pageable) {
 
-        Long companyId = companyRepository.findByName(companyName);
-        Page<JobPostingEntity> jobPostingEntityList = jobPostingRepository.findByTitleAndCompanyId(title, companyId, pageable);
+        Map<Long, String> companyMap = companyRepository.findByNameIn(companyNames).stream()
+            .collect(Collectors.toMap(CompanyEntity::getId, CompanyEntity::getName));
+
+        Page<JobPostingEntity> jobPostingEntityList = jobPostingRepository.findByTitleInAndCompanyIdIn(titles, companyMap.keySet(), pageable);
+
         List<JobPosting> jobPostings = jobPostingEntityList.get()
             .map(job -> new JobPosting(
-                companyName,
+                companyMap.get(job.getCompanyId()),
                 job.getTitle(),
                 job.getExperienceLevel(),
                 job.getEmploymentType(),
