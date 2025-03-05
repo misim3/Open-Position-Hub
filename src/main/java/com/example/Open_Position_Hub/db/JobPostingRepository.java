@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 public interface JobPostingRepository extends JpaRepository<JobPostingEntity, Long> {
 
@@ -14,7 +15,9 @@ public interface JobPostingRepository extends JpaRepository<JobPostingEntity, Lo
 
     Page<JobPostingEntity> findByTitleInAndCompanyIdIn(Collection<String> titles, Collection<Long> longs, Pageable pageable);
 
-    List<JobPostingEntity> findDistinctByTitleNotNull();
+    @Query("select distinct j.title from JobPostingEntity j where j.title is not null ")
+    List<String> findDistinctTitles();
 
-    List<JobPostingEntity> findDistinctByCompanyIdNotNull();
+    @Query("select distinct j.companyId from JobPostingEntity j where j.companyId is not null ")
+    List<Long> findDistinctCompanyIds();
 }
