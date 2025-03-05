@@ -4,6 +4,7 @@ import com.example.Open_Position_Hub.db.CompanyEntity;
 import com.example.Open_Position_Hub.db.CompanyRepository;
 import com.example.Open_Position_Hub.db.JobPostingEntity;
 import com.example.Open_Position_Hub.db.JobPostingRepository;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -112,5 +113,23 @@ public class JobPostingService {
             .toList();
 
         return new PageImpl<>(jobPostings, pageable, jobPostingEntityList.getTotalElements());
+    }
+
+    public Map<String, List<String>> getFilterOptions() {
+
+        Map<String, List<String>> filters = new HashMap<>();
+
+        filters.put("titles", jobPostingRepository.findDistinctByTitleNotNull().stream()
+            .map(JobPostingEntity::getTitle)
+            .toList());
+
+        filters.put("companyNames", jobPostingRepository.findDistinctByCompanyIdNotNull().stream()
+            .map(job -> companyRepository.findById(job.getCompanyId())
+                .map(CompanyEntity::getName)
+                .orElseThrow(() -> new RuntimeException("Not Found Company By CompanyId while getFilterOptions.")))
+            .toList()
+        );
+
+        return filters;
     }
 }
