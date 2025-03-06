@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>채용 공고 검색</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    function updateSelectedFilters() {
+      const selectedTitles = Array.from(document.querySelectorAll("input[name='titleFilter']:checked"))
+      .map(input => input.value);
+      const selectedCompanies = Array.from(document.querySelectorAll("input[name='companyFilter']:checked"))
+      .map(input => input.value);
+
+      const titleHTML = selectedTitles.map(title => `<span class='border border-gray-500 shadow-sm px-3 py-1 rounded-md mr-2 mb-2 whitespace-nowrap'>${title} <button onclick='removeFilter("titleFilter", "${title}")' class='text-red-500'>&times;</button></span>`).join(" ");
+      const companyHTML = selectedCompanies.map(company => `<span class='border border-gray-500 shadow-sm px-3 py-1 rounded-md mr-2 mb-2 whitespace-nowrap'>${company} <button onclick='removeFilter("companyFilter", "${company}")' class='text-red-500'>&times;</button></span>`).join(" ");
+
+      document.getElementById("selectedFilters").innerHTML =
+          `<strong>선택한 직무:</strong> <div class='flex flex-wrap max-h-20 overflow-y-auto fixed-width'>${titleHTML || '없음'}</div><br>
+         <strong>선택한 회사:</strong> <div class='flex flex-wrap max-h-20 overflow-y-auto fixed-width'>${companyHTML || '없음'}</div>`;
+    }
+
+    function removeFilter(filterName, value) {
+      document.querySelector(`input[name='${filterName}'][value='${value}']`).checked = false;
+      updateSelectedFilters();
+    }
+  </script>
+  <style>
+    .scroll-box {
+      max-height: 150px;
+      overflow-y: auto;
+      border: 1px solid #ccc;
+      padding: 5px;
+      border-radius: 5px;
+    }
+    .filter-bar {
+      width: 250px;
+      min-height: 450px;
+    }
+    .search-button {
+      width: 100px;
+      height: 40px;
+      position: absolute;
+      right: 10px;
+      top: 10px;
+    }
+    .fixed-width {
+      min-width: 300px;
+      max-width: 500px;
+    }
+    .job-container {
+      min-height: 450px;
+    }
+  </style>
+</head>
+<body class="bg-gray-100">
+<div class="max-w-5xl mx-auto py-10">
+  <h1 class="text-3xl font-bold text-center mb-6">채용 공고 검색</h1>
+
+  <div class="flex gap-6">
+    <!-- 📌 필터 바 -->
+    <div class="filter-bar bg-white shadow p-5 rounded-lg">
+      <h3 class="text-lg font-semibold mb-2">직무</h3>
+      <div class="scroll-box">
+        <label><input type="checkbox" name="titleFilter" value="Data Engineer" onchange="updateSelectedFilters()"> Data Engineer</label><br>
+        <label><input type="checkbox" name="titleFilter" value="BX Designer" onchange="updateSelectedFilters()"> BX Designer</label><br>
+        <label><input type="checkbox" name="titleFilter" value="QA Engineer" onchange="updateSelectedFilters()"> QA Engineer</label><br>
+        <label><input type="checkbox" name="titleFilter" value="Software Developer" onchange="updateSelectedFilters()"> Software Developer</label><br>
+        <label><input type="checkbox" name="titleFilter" value="Product Manager" onchange="updateSelectedFilters()"> Product Manager</label><br>
+        <label><input type="checkbox" name="titleFilter" value="UX/UI Designer" onchange="updateSelectedFilters()"> UX/UI Designer</label><br>
+        <label><input type="checkbox" name="titleFilter" value="DevOps Engineer" onchange="updateSelectedFilters()"> DevOps Engineer</label>
+      </div>
+
+      <h3 class="text-lg font-semibold mt-4 mb-2">회사명</h3>
+      <div class="scroll-box">
+        <label><input type="checkbox" name="companyFilter" value="Doodlin" onchange="updateSelectedFilters()"> Doodlin</label><br>
+        <label><input type="checkbox" name="companyFilter" value="Google" onchange="updateSelectedFilters()"> Google</label><br>
+        <label><input type="checkbox" name="companyFilter" value="Samsung" onchange="updateSelectedFilters()"> Samsung</label><br>
+        <label><input type="checkbox" name="companyFilter" value="LG" onchange="updateSelectedFilters()"> LG</label><br>
+        <label><input type="checkbox" name="companyFilter" value="Amazon" onchange="updateSelectedFilters()"> Amazon</label><br>
+        <label><input type="checkbox" name="companyFilter" value="Microsoft" onchange="updateSelectedFilters()"> Microsoft</label>
+      </div>
+    </div>
+
+    <!-- 📌 검색 결과 -->
+    <div class="job-container bg-white shadow p-5 rounded-lg relative">
+      <div class="flex justify-between items-center mb-4">
+        <div id="selectedFilters" class="text-gray-700 fixed-width">
+          <strong>선택한 직무:</strong> 없음<br>
+          <strong>선택한 회사:</strong> 없음
+        </div>
+        <button class="search-button bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600">검색</button>
+      </div>
+      <ul id="jobResults" class="divide-y">
+        <li class="border-b py-4">
+          <a href="#" class="text-blue-600 font-semibold hover:underline">Doodlin - Data Engineer</a>
+          <span class='text-gray-500 text-sm'>(서울시 강남구, 정규직)</span>
+        </li>
+        <li class="border-b py-4">
+          <a href="#" class="text-blue-600 font-semibold hover:underline">Google - Software Developer</a>
+          <span class='text-gray-500 text-sm'>(서울시 강남구, 정규직)</span>
+        </li>
+        <li class="border-b py-4">
+          <a href="#" class="text-blue-600 font-semibold hover:underline">Samsung - Product Manager</a>
+          <span class='text-gray-500 text-sm'>(서울시 서초구, 정규직)</span>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+</body>
+</html>
