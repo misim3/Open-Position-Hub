@@ -7,39 +7,76 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     document.addEventListener("DOMContentLoaded", function () {
-      paginateJobs(1);
+      fetchFilters();
+      fetchJobPostings();
     });
 
-    function paginateJobs(page) {
-      const jobsPerPage = 20;
-      const jobList = [
-        { company: "Doodlin", title: "Data Engineer", location: "서울시 강남구", type: "정규직" },
-        { company: "Google", title: "Software Developer", location: "서울시 강남구", type: "정규직" },
-        { company: "Samsung", title: "Product Manager", location: "서울시 서초구", type: "정규직" },
-        { company: "Microsoft", title: "DevOps Engineer", location: "서울시 종로구", type: "정규직" },
-        { company: "Amazon", title: "UX/UI Designer", location: "서울시 마포구", type: "계약직" },
-        { company: "LG", title: "QA Engineer", location: "서울시 마포구", type: "인턴" },
-      ];
+    function fetchFilters() {
+      fetch("/api/job/filters")
+      .then(response => response.json())
+      .then(data => {
+        populateFilterOptions("titleFilter", data.titles);
+        populateFilterOptions("companyFilter", data.companyNames);
+      })
+      .catch(error => console.error("Error fetching filters:", error));
+    }
 
-      let totalJobs = jobList.length;
-      let totalPages = Math.ceil(totalJobs / jobsPerPage);
-      let start = (page - 1) * jobsPerPage;
-      let end = start + jobsPerPage;
-      let displayedJobs = jobList.slice(start, end);
+    function populateFilterOptions(filterName, options) {
+      const filterContainer = document.getElementById(`${filterName}Container`);
+      filterContainer.innerHTML = options.map(option =>
+          `<label><input type="checkbox" name="${filterName}" value="${option}"> ${option}</label><br>`
+      ).join("");
+    }
 
+    function fetchJobPostings(titles = [], companyNames = [], page = 0, size = 20) {
+      let url = `/jobs?page=${page}&size=${size}`;
+      if (titles.length > 0 && companyNames.length > 0) {
+        url += `&titles=${titles.join(',')}&companyNames=${companyNames.join(',')}`;
+      } else if (companyNames.length > 0) {
+        url += `&companyNames=${companyNames.join(',')}`;
+      }
+
+      fetch(url)
+      .then(response => response.json())
+      .then(data => {
+        displayJobs(data.content);
+        setupPagination(data.totalPages, page);
+      })
+      .catch(error => console.error("Error fetching jobs:", error));
+    }
+
+    function displayJobs(jobs) {
       const jobResults = document.getElementById("jobResults");
-      jobResults.innerHTML = displayedJobs.map(job =>
+      jobResults.innerHTML = jobs.map(job =>
           `<li class="border-b py-4">
-          <a href="#" class="text-blue-600 font-semibold hover:underline">${job.company} - ${job.title}</a>
-          <span class='text-gray-500 text-sm'>(${job.location}, ${job.type})</span>
+          <a href="${job.detailUrl}" target="_blank" class="text-blue-600 font-semibold hover:underline">${job.companyName} - ${job.title}</a>
+          <div class='text-gray-500 text-sm'>
+            <span>경력: ${job.experienceLevel}</span> |
+            <span>고용 형태: ${job.employmentType}</span> |
+            <span>위치: ${job.location}</span>
+          </div>
         </li>`
       ).join("");
+    }
 
+    function setupPagination(totalPages, currentPage) {
       const pagination = document.getElementById("pagination");
       pagination.innerHTML = "";
-      for (let i = 1; i <= totalPages; i++) {
-        pagination.innerHTML += `<button class="px-3 py-1 mx-1 bg-gray-200 rounded hover:bg-gray-300" onclick="paginateJobs(${i})">${i}</button>`;
+      for (let i = 0; i < totalPages; i++) {
+        pagination.innerHTML += `<button class="px-3 py-1 mx-1 bg-gray-200 rounded hover:bg-gray-300" onclick="fetchJobPostings(getSelectedTitles(), getSelectedCompanies(), ${i})">${i + 1}</button>`;
       }
+    }
+
+    function getSelectedTitles() {
+      return Array.from(document.querySelectorAll("input[name='titleFilter']:checked")).map(input => input.value);
+    }
+
+    function getSelectedCompanies() {
+      return Array.from(document.querySelectorAll("input[name='companyFilter']:checked")).map(input => input.value);
+    }
+
+    function searchJobs() {
+      fetchJobPostings(getSelectedTitles(), getSelectedCompanies());
     }
   </script>
   <style>
@@ -69,42 +106,41 @@
       flex-direction: column;
       gap: 20px;
     }
+    .alert-box {
+      background-color: #fef3c7;
+      padding: 10px;
+      border-radius: 5px;
+      text-align: center;
+      font-weight: bold;
+      color: #92400e;
+      border: 1px solid #fbbf24;
+      margin-bottom: 15px;
+    }
   </style>
 </head>
 <body class="bg-gray-100">
 <div class="max-w-5xl mx-auto py-10">
-  <h1 class="text-3xl font-bold text-center mb-6">채용 공고 검색</h1>
+  <h1 class="text-3xl font-bold text-center mb-6">병역특례 채용 공고 검색</h1>
+
+  <!-- ⚠️ 주의 메시지 -->
+  <div class="alert-box">
+    ⚠️ 본 공고 목록은 병역지정업체의 채용 정보를 포함하고 있습니다. 지원 전에 반드시 해당 공고에 본인의 복무가 가능한지 확인하세요.
+  </div>
 
   <div class="flex gap-6">
     <!-- 📌 필터 바 -->
     <div class="filter-bar bg-white shadow p-5 rounded-lg">
       <h3 class="text-lg font-semibold mb-2">직무</h3>
-      <div class="scroll-box">
-        <label><input type="checkbox" name="titleFilter" value="Data Engineer"> Data Engineer</label><br>
-        <label><input type="checkbox" name="titleFilter" value="BX Designer"> BX Designer</label><br>
-        <label><input type="checkbox" name="titleFilter" value="QA Engineer"> QA Engineer</label><br>
-        <label><input type="checkbox" name="titleFilter" value="Software Developer"> Software Developer</label><br>
-        <label><input type="checkbox" name="titleFilter" value="Product Manager"> Product Manager</label><br>
-        <label><input type="checkbox" name="titleFilter" value="UX/UI Designer"> UX/UI Designer</label><br>
-        <label><input type="checkbox" name="titleFilter" value="DevOps Engineer"> DevOps Engineer</label>
-      </div>
-
+      <div class="scroll-box" id="titleFilterContainer"></div>
       <h3 class="text-lg font-semibold mt-4 mb-2">회사</h3>
-      <div class="scroll-box">
-        <label><input type="checkbox" name="companyFilter" value="Doodlin"> Doodlin</label><br>
-        <label><input type="checkbox" name="companyFilter" value="Google"> Google</label><br>
-        <label><input type="checkbox" name="companyFilter" value="Samsung"> Samsung</label><br>
-        <label><input type="checkbox" name="companyFilter" value="LG"> LG</label><br>
-        <label><input type="checkbox" name="companyFilter" value="Amazon"> Amazon</label><br>
-        <label><input type="checkbox" name="companyFilter" value="Microsoft"> Microsoft</label>
-      </div>
+      <div class="scroll-box" id="companyFilterContainer"></div>
     </div>
 
     <!-- 📌 메인 컨텐츠 영역 -->
     <div class="flex-grow bg-white shadow p-5 rounded-lg content-wrapper">
       <!-- 검색 버튼 영역 (공고 목록 위로 이동) -->
       <div class="search-section">
-        <button class="search-button bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600">검색</button>
+        <button class="search-button bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600" onclick="searchJobs()">검색</button>
       </div>
 
       <!-- 공고 목록 영역 -->
