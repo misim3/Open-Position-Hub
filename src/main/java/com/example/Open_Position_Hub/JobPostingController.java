@@ -22,7 +22,7 @@ public class JobPostingController {
     }
 
     @GetMapping(value = "/jobs", params = "!titles&!companyNames")
-    public ResponseEntity<Page<JobPosting>> getJobPostings(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size) {
+    public ResponseEntity<Page<JobPosting>> getJobPostings(@RequestParam(name = "page", required = false, defaultValue = "0") int page, @RequestParam(name = "size", required = false, defaultValue = "20") int size) {
 
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         Page<JobPosting> jobPostings = jobPostingService.getAllJobPostings(pageable);
@@ -31,7 +31,7 @@ public class JobPostingController {
     }
 
     @GetMapping(value = "/jobs", params = "titles")
-    public ResponseEntity<Page<JobPosting>> getJobPostingsByTitle(@RequestParam List<String> titles, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size) {
+    public ResponseEntity<Page<JobPosting>> getJobPostingsByTitle(@RequestParam(name = "titles") List<String> titles, @RequestParam(name = "page", required = false, defaultValue = "0") int page, @RequestParam(name = "size", required = false, defaultValue = "20") int size) {
 
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         Page<JobPosting> jobPostings = jobPostingService.getJobPostingsByTitles(titles, pageable);
@@ -40,7 +40,7 @@ public class JobPostingController {
     }
 
     @GetMapping(value = "/jobs", params = "companyNames")
-    public ResponseEntity<Page<JobPosting>> getJobPostingsByCompanyName(@RequestParam List<String> companyNames, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size) {
+    public ResponseEntity<Page<JobPosting>> getJobPostingsByCompanyName(@RequestParam(name = "companyNames") List<String> companyNames, @RequestParam(name = "page", required = false, defaultValue = "0") int page, @RequestParam(name = "size", required = false, defaultValue = "20") int size) {
 
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         Page<JobPosting> jobPostings = jobPostingService.getJobPostingsByCompanyNames(companyNames, pageable);
@@ -49,7 +49,7 @@ public class JobPostingController {
     }
 
     @GetMapping(value = "/jobs", params = {"titles", "companyNames"})
-    public ResponseEntity<Page<JobPosting>> getJobPostingsByTitleAndCompanyName(@RequestParam List<String> titles, @RequestParam List<String> companyNames, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size) {
+    public ResponseEntity<Page<JobPosting>> getJobPostingsByTitleAndCompanyName(@RequestParam(name = "titles") List<String> titles, @RequestParam(name = "companyNames") List<String> companyNames, @RequestParam(name = "page", required = false, defaultValue = "0") int page, @RequestParam(name = "size", required = false, defaultValue = "20") int size) {
 
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         Page<JobPosting> jobPostings = jobPostingService.getJobPostingsByTitlesAndCompanyNames(titles, companyNames, pageable);
