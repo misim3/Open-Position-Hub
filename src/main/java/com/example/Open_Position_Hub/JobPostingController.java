@@ -21,7 +21,7 @@ public class JobPostingController {
         this.jobPostingService = jobPostingService;
     }
 
-    @GetMapping("/jobs")
+    @GetMapping(value = "/jobs", params = "!titles&!companyNames")
     public ResponseEntity<Page<JobPosting>> getJobPostings(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size) {
 
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
@@ -30,7 +30,7 @@ public class JobPostingController {
         return new ResponseEntity<>(jobPostings, HttpStatus.OK);
     }
 
-    @GetMapping("/jobs")
+    @GetMapping(value = "/jobs", params = "titles")
     public ResponseEntity<Page<JobPosting>> getJobPostingsByTitle(@RequestParam List<String> titles, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size) {
 
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
@@ -39,7 +39,7 @@ public class JobPostingController {
         return new ResponseEntity<>(jobPostings, HttpStatus.OK);
     }
 
-    @GetMapping("/jobs")
+    @GetMapping(value = "/jobs", params = "companyNames")
     public ResponseEntity<Page<JobPosting>> getJobPostingsByCompanyName(@RequestParam List<String> companyNames, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size) {
 
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
@@ -48,7 +48,7 @@ public class JobPostingController {
         return new ResponseEntity<>(jobPostings, HttpStatus.OK);
     }
 
-    @GetMapping("/jobs")
+    @GetMapping(value = "/jobs", params = {"titles", "companyNames"})
     public ResponseEntity<Page<JobPosting>> getJobPostingsByTitleAndCompanyName(@RequestParam List<String> titles, @RequestParam List<String> companyNames, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size) {
 
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
