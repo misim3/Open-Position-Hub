@@ -21,40 +21,27 @@ public class JobPostingController {
         this.jobPostingService = jobPostingService;
     }
 
-    @GetMapping(value = "/jobs", params = "!titles&!companyNames")
-    public ResponseEntity<Page<JobPosting>> getJobPostings(@RequestParam(name = "page", required = false, defaultValue = "0") int page, @RequestParam(name = "size", required = false, defaultValue = "20") int size) {
+    @GetMapping("/jobs")
+    public ResponseEntity<Page<JobPosting>> getFilteredJobPostings(
+        @RequestParam(name = "titles", required = false) List<String> titles,
+        @RequestParam(name = "companyNames", required = false) List<String> companyNames,
+        @RequestParam(name = "page", required = false, defaultValue = "1") int page,
+        @RequestParam(name = "size", required = false, defaultValue = "20") int size) {
 
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        Page<JobPosting> jobPostings = jobPostingService.getAllJobPostings(pageable);
+        Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<JobPosting> jobPostings;
 
-        return new ResponseEntity<>(jobPostings, HttpStatus.OK);
-    }
+        if (titles != null && companyNames != null) {
+            jobPostings = jobPostingService.getJobPostingsByTitlesAndCompanyNames(titles, companyNames, pageable);
+        } else if (titles != null) {
+            jobPostings = jobPostingService.getJobPostingsByTitles(titles, pageable);
+        } else if (companyNames != null) {
+            jobPostings = jobPostingService.getJobPostingsByCompanyNames(companyNames, pageable);
+        } else {
+            jobPostings = jobPostingService.getAllJobPostings(pageable);
+        }
 
-    @GetMapping(value = "/jobs", params = "titles")
-    public ResponseEntity<Page<JobPosting>> getJobPostingsByTitle(@RequestParam(name = "titles") List<String> titles, @RequestParam(name = "page", required = false, defaultValue = "0") int page, @RequestParam(name = "size", required = false, defaultValue = "20") int size) {
-
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        Page<JobPosting> jobPostings = jobPostingService.getJobPostingsByTitles(titles, pageable);
-
-        return new ResponseEntity<>(jobPostings, HttpStatus.OK);
-    }
-
-    @GetMapping(value = "/jobs", params = "companyNames")
-    public ResponseEntity<Page<JobPosting>> getJobPostingsByCompanyName(@RequestParam(name = "companyNames") List<String> companyNames, @RequestParam(name = "page", required = false, defaultValue = "0") int page, @RequestParam(name = "size", required = false, defaultValue = "20") int size) {
-
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        Page<JobPosting> jobPostings = jobPostingService.getJobPostingsByCompanyNames(companyNames, pageable);
-
-        return new ResponseEntity<>(jobPostings, HttpStatus.OK);
-    }
-
-    @GetMapping(value = "/jobs", params = {"titles", "companyNames"})
-    public ResponseEntity<Page<JobPosting>> getJobPostingsByTitleAndCompanyName(@RequestParam(name = "titles") List<String> titles, @RequestParam(name = "companyNames") List<String> companyNames, @RequestParam(name = "page", required = false, defaultValue = "0") int page, @RequestParam(name = "size", required = false, defaultValue = "20") int size) {
-
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        Page<JobPosting> jobPostings = jobPostingService.getJobPostingsByTitlesAndCompanyNames(titles, companyNames, pageable);
-
-        return new ResponseEntity<>(jobPostings, HttpStatus.OK);
+        return ResponseEntity.ok(jobPostings);
     }
 
     @GetMapping("/filters")
