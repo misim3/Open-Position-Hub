@@ -8,11 +8,11 @@
   <script>
     document.addEventListener("DOMContentLoaded", function () {
       fetchFilters();
-      fetchJobPostings();
+      fetchJobPostings([], [], 0, 20);
     });
 
     function fetchFilters() {
-      fetch("/api/job/filters")
+      fetch("/filters")
       .then(response => response.json())
       .then(data => {
         populateFilterOptions("titleFilter", data.titles);
@@ -30,17 +30,26 @@
 
     function fetchJobPostings(titles = [], companyNames = [], page = 0, size = 20) {
       let url = `/jobs?page=${page}&size=${size}`;
-      if (titles.length > 0 && companyNames.length > 0) {
-        url += `&titles=${titles.join(',')}&companyNames=${companyNames.join(',')}`;
-      } else if (companyNames.length > 0) {
-        url += `&companyNames=${companyNames.join(',')}`;
+      const params = new URLSearchParams();
+
+      if (titles.length > 0) {
+        titles.forEach(title => params.append("titles", title));
+      }
+
+      if (companyNames.length > 0) {
+        companyNames.forEach(company => params.append("companyNames", company));
+      }
+
+      if (params.toString()) {
+        url += `&${params.toString()}`;
       }
 
       fetch(url)
       .then(response => response.json())
       .then(data => {
         displayJobs(data.content);
-        setupPagination(data.totalPages, page);
+        updateTotalJobs(data.page.totalElements);
+        setupPagination(data.page.totalPages, data.page.number, titles, companyNames);
       })
       .catch(error => console.error("Error fetching jobs:", error));
     }
@@ -49,21 +58,53 @@
       const jobResults = document.getElementById("jobResults");
       jobResults.innerHTML = jobs.map(job =>
           `<li class="border-b py-4">
-          <a href="${job.detailUrl}" target="_blank" class="text-blue-600 font-semibold hover:underline">${job.companyName} - ${job.title}</a>
+          <a href="${job.detailUrl}" target="_blank" class="text-blue-600 font-semibold hover:underline">${job.title}</a>
           <div class='text-gray-500 text-sm'>
-            <span>경력: ${job.experienceLevel}</span> |
-            <span>고용 형태: ${job.employmentType}</span> |
-            <span>위치: ${job.location}</span>
+            <span>회사: ${job.companyName}</span> |
+            <span>경력: ${job.experienceLevel || "무관"}</span> |
+            <span>고용 형태: ${job.employmentType || "미정"}</span> |
+            <span>위치: ${job.location || "미정"}</span>
           </div>
         </li>`
       ).join("");
     }
 
-    function setupPagination(totalPages, currentPage) {
+    function updateTotalJobs(totalJobs) {
+      const totalJobsElement = document.getElementById("totalJobs");
+      totalJobsElement.textContent = `총 ${totalJobs}개의 공고가 검색되었습니다.`;
+    }
+
+    function setupPagination(totalPages, currentPage, titles, companyNames) {
       const pagination = document.getElementById("pagination");
       pagination.innerHTML = "";
-      for (let i = 0; i < totalPages; i++) {
-        pagination.innerHTML += `<button class="px-3 py-1 mx-1 bg-gray-200 rounded hover:bg-gray-300" onclick="fetchJobPostings(getSelectedTitles(), getSelectedCompanies(), ${i})">${i + 1}</button>`;
+
+      if (totalPages <= 1) return; // 페이지가 1개면 페이지네이션 표시 안함
+
+      const maxPagesToShow = 5;
+      let startPage = Math.max(0, currentPage - Math.floor(maxPagesToShow / 2));
+      let endPage = Math.min(totalPages - 1, startPage + maxPagesToShow - 1);
+
+      if (endPage - startPage < maxPagesToShow - 1) {
+        startPage = Math.max(0, endPage - maxPagesToShow + 1);
+      }
+
+      // 이전 버튼
+      if (currentPage > 0) {
+        pagination.innerHTML += `<button class="px-3 py-1 mx-1 rounded bg-gray-200 hover:bg-gray-300"
+          onclick="fetchJobPostings(${JSON.stringify(titles)}, ${JSON.stringify(companyNames)}, ${currentPage - 1})">이전</button>`;
+      }
+
+      // 페이지 숫자 버튼
+      for (let i = startPage; i <= endPage; i++) {
+        pagination.innerHTML += `<button class="px-3 py-1 mx-1 rounded ${
+            i === currentPage ? "bg-blue-500 text-white" : "bg-gray-200 hover:bg-gray-300"
+        }" onclick="fetchJobPostings(${JSON.stringify(titles)}, ${JSON.stringify(companyNames)}, ${i})">${i + 1}</button>`;
+      }
+
+      // 다음 버튼
+      if (currentPage < totalPages - 1) {
+        pagination.innerHTML += `<button class="px-3 py-1 mx-1 rounded bg-gray-200 hover:bg-gray-300"
+          onclick="fetchJobPostings(${JSON.stringify(titles)}, ${JSON.stringify(companyNames)}, ${currentPage + 1})">다음</button>`;
       }
     }
 
@@ -76,7 +117,7 @@
     }
 
     function searchJobs() {
-      fetchJobPostings(getSelectedTitles(), getSelectedCompanies());
+      fetchJobPostings(getSelectedTitles(), getSelectedCompanies(), 0);
     }
   </script>
   <style>
@@ -142,6 +183,8 @@
       <div class="search-section">
         <button class="search-button bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600" onclick="searchJobs()">검색</button>
       </div>
+
+      <div id="totalJobs" class="text-right text-gray-600 mb-4"></div>
 
       <!-- 공고 목록 영역 -->
       <ul id="jobResults" class="divide-y"></ul>
