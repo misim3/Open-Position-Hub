@@ -78,7 +78,7 @@
       const pagination = document.getElementById("pagination");
       pagination.innerHTML = "";
 
-      if (totalPages <= 1) return; // 페이지가 1개면 페이지네이션 표시 안함
+      if (totalPages <= 1) return;
 
       const maxPagesToShow = 5;
       let startPage = Math.max(0, currentPage - Math.floor(maxPagesToShow / 2));
@@ -88,23 +88,25 @@
         startPage = Math.max(0, endPage - maxPagesToShow + 1);
       }
 
-      // 이전 버튼
+      const encodeArray = (arr) => '[' + arr.map(item => `'${item.replace(/'/g, "\\'")}'`).join(',') + ']';
+
+      const encodedTitles = encodeArray(titles);
+      const encodedCompanies = encodeArray(companyNames);
+
       if (currentPage > 0) {
         pagination.innerHTML += `<button class="px-3 py-1 mx-1 rounded bg-gray-200 hover:bg-gray-300"
-          onclick="fetchJobPostings(${JSON.stringify(titles)}, ${JSON.stringify(companyNames)}, ${currentPage - 1})">이전</button>`;
+      onclick="fetchJobPostings(${encodedTitles}, ${encodedCompanies}, ${currentPage - 1})">이전</button>`;
       }
 
-      // 페이지 숫자 버튼
       for (let i = startPage; i <= endPage; i++) {
         pagination.innerHTML += `<button class="px-3 py-1 mx-1 rounded ${
             i === currentPage ? "bg-blue-500 text-white" : "bg-gray-200 hover:bg-gray-300"
-        }" onclick="fetchJobPostings(${JSON.stringify(titles)}, ${JSON.stringify(companyNames)}, ${i})">${i + 1}</button>`;
+        }" onclick="fetchJobPostings(${encodedTitles}, ${encodedCompanies}, ${i})">${i + 1}</button>`;
       }
 
-      // 다음 버튼
       if (currentPage < totalPages - 1) {
         pagination.innerHTML += `<button class="px-3 py-1 mx-1 rounded bg-gray-200 hover:bg-gray-300"
-          onclick="fetchJobPostings(${JSON.stringify(titles)}, ${JSON.stringify(companyNames)}, ${currentPage + 1})">다음</button>`;
+      onclick="fetchJobPostings(${encodedTitles}, ${encodedCompanies}, ${currentPage + 1})">다음</button>`;
       }
     }
 
