@@ -54,12 +54,27 @@ public class Manager {
         return List.of();
     }
 
-    private void saveJobPostings(List<JobPostingEntity> jobPostingEntities) {
+    private void saveJobPostings(List<JobPostingEntity> scrapedJobPostings) {
 
-        if (jobPostingEntities.isEmpty()) {
+        if (scrapedJobPostings.isEmpty()) {
             return;
         }
 
-        jobPostingRepository.saveAll(jobPostingEntities);
+        List<String> existingUrls = jobPostingRepository.findByCompanyId(scrapedJobPostings.get(0).getCompanyId()).stream()
+            .map(JobPostingEntity::getDetailUrl)
+            .toList();
+
+        List<JobPostingEntity> newJobPostings = scrapedJobPostings.stream()
+            .filter(job -> !existingUrls.contains(job.getDetailUrl()))
+            .toList();
+
+        if (!newJobPostings.isEmpty()) {
+            jobPostingRepository.saveAll(newJobPostings);
+            logger.info("Saved {} new job postings.", newJobPostings.size());
+        } else {
+            logger.info("No new job postings to save. All are duplicates.");
+        }
+        
+        jobPostingRepository.saveAll(scrapedJobPostings);
     }
 }

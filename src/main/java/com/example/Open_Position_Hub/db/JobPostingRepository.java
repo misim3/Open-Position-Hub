@@ -20,4 +20,6 @@ public interface JobPostingRepository extends JpaRepository<JobPostingEntity, Lo
 
     @Query("select distinct j.companyId from JobPostingEntity j where j.companyId is not null ")
     List<Long> findDistinctCompanyIds();
+
+    List<JobPostingEntity> findByCompanyId(Long companyId);
 }
