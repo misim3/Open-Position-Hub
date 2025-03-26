@@ -23,6 +23,7 @@ dependencies {
 	implementation 'org.jsoup:jsoup:1.18.3'
 	implementation 'org.seleniumhq.selenium:selenium-java:4.28.1'
 	implementation 'org.junit.jupiter:junit-jupiter-engine:5.11.4'
+	implementation 'org.apache.poi:poi-ooxml:5.4.0'
 	runtimeOnly 'com.mysql:mysql-connector-j'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
