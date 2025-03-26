@@ -29,6 +29,14 @@ public class CompanyEntity extends BaseEntity {
         return recruitmentUrl;
     }
 
+    public void setRecruitmentPlatform(String recruitmentPlatform) {
+        this.recruitmentPlatform = recruitmentPlatform;
+    }
+
+    public void setRecruitmentUrl(String recruitmentUrl) {
+        this.recruitmentUrl = recruitmentUrl;
+    }
+
     @Override
     public String toString() {
         return "CompanyEntity{" +
