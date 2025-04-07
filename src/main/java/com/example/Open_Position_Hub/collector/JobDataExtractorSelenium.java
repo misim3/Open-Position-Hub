@@ -35,7 +35,7 @@ public class JobDataExtractorSelenium {
 
         // Chrome 옵션 설정
         ChromeOptions options = new ChromeOptions();
-//        options.addArguments("--headless");  // 헤드리스 모드 (UI 없이 실행)
+        options.addArguments("--headless");  // 헤드리스 모드 (UI 없이 실행)
         options.addArguments("--disable-gpu");
         options.addArguments("--no-sandbox");
 
