@@ -4,6 +4,8 @@ import com.example.Open_Position_Hub.db.CompanyEntity;
 import com.example.Open_Position_Hub.db.CompanyRepository;
 import com.example.Open_Position_Hub.db.JobPostingEntity;
 import com.example.Open_Position_Hub.db.JobPostingRepository;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,22 +26,31 @@ public class JobPostingService {
         this.companyRepository = companyRepository;
     }
 
+    private String buildRedirectUrl(String recruitmentUrl, String detailUrl) {
+        try {
+            URI baseUri = new URI(recruitmentUrl);
+            String domain = baseUri.getScheme() + "://" + baseUri.getHost();
+            return domain + detailUrl;
+        } catch (URISyntaxException e) {
+            throw new RuntimeException("Invalid recruitment URL: " + recruitmentUrl);
+        }
+    }
+
     public Page<JobPosting> getAllJobPostings(Pageable pageable) {
 
         Page<JobPostingEntity> jobPostingEntityList = jobPostingRepository.findAll(pageable);
 
         List<JobPosting> jobPostings = jobPostingEntityList.get()
             .map(job -> {
-                String companyName = companyRepository.findById(job.getCompanyId())
-                    .map(CompanyEntity::getName)
+                CompanyEntity company = companyRepository.findById(job.getCompanyId())
                     .orElseThrow(() -> new RuntimeException("Not Found Company By CompanyId while getAllJobPostings."));
                 return new JobPosting(
-                    companyName,
+                    company.getName(),
                     job.getTitle(),
                     job.getExperienceLevel(),
                     job.getEmploymentType(),
                     job.getLocation(),
-                    job.getDetailUrl()
+                    buildRedirectUrl(company.getRecruitmentUrl(), job.getDetailUrl())
                 );
             })
             .toList();
@@ -49,20 +60,23 @@ public class JobPostingService {
 
     public Page<JobPosting> getJobPostingsByCompanyNames(List<String> companyNames, Pageable pageable) {
 
-        Map<Long, String> companyMap = companyRepository.findByNameIn(companyNames).stream()
-            .collect(Collectors.toMap(CompanyEntity::getId, CompanyEntity::getName));
+        Map<Long, CompanyEntity> companyMap = companyRepository.findByNameIn(companyNames).stream()
+            .collect(Collectors.toMap(CompanyEntity::getId, company -> company));
 
         Page<JobPostingEntity> jobPostingEntityList = jobPostingRepository.findByCompanyIdIn(companyMap.keySet(), pageable);
 
         List<JobPosting> jobPostings = jobPostingEntityList.get()
-            .map(job -> new JobPosting(
-                companyMap.get(job.getCompanyId()),
-                job.getTitle(),
-                job.getExperienceLevel(),
-                job.getEmploymentType(),
-                job.getLocation(),
-                job.getDetailUrl()
-            ))
+            .map(job -> {
+                CompanyEntity company = companyMap.get(job.getCompanyId());
+                return new JobPosting(
+                    company.getName(),
+                    job.getTitle(),
+                    job.getExperienceLevel(),
+                    job.getEmploymentType(),
+                    job.getLocation(),
+                    buildRedirectUrl(company.getRecruitmentUrl(), job.getDetailUrl())
+                );
+            })
             .toList();
 
         return new PageImpl<>(jobPostings, pageable, jobPostingEntityList.getTotalElements());
@@ -75,18 +89,16 @@ public class JobPostingService {
         List<JobPosting> jobPostings = jobPostingEntityList.get()
             .map(job -> {
 
-                String companyName = companyRepository.findById(job.getCompanyId())
-                    .map(CompanyEntity::getName)
+                CompanyEntity company = companyRepository.findById(job.getCompanyId())
                     .orElseThrow(() -> new RuntimeException("Not Found Company By CompanyId while getJobPostingsByTitle."));
 
                 return new JobPosting(
-                    companyName,
+                    company.getName(),
                     job.getTitle(),
                     job.getExperienceLevel(),
                     job.getEmploymentType(),
                     job.getLocation(),
-                    job.getDetailUrl()
-
+                    buildRedirectUrl(company.getRecruitmentUrl(), job.getDetailUrl())
                 );
             })
             .toList();
@@ -96,20 +108,23 @@ public class JobPostingService {
 
     public Page<JobPosting> getJobPostingsByTitlesAndCompanyNames(List<String> titles, List<String> companyNames, Pageable pageable) {
 
-        Map<Long, String> companyMap = companyRepository.findByNameIn(companyNames).stream()
-            .collect(Collectors.toMap(CompanyEntity::getId, CompanyEntity::getName));
+        Map<Long, CompanyEntity> companyMap = companyRepository.findByNameIn(companyNames).stream()
+            .collect(Collectors.toMap(CompanyEntity::getId, company -> company));
 
         Page<JobPostingEntity> jobPostingEntityList = jobPostingRepository.findByTitleInAndCompanyIdIn(titles, companyMap.keySet(), pageable);
 
         List<JobPosting> jobPostings = jobPostingEntityList.get()
-            .map(job -> new JobPosting(
-                companyMap.get(job.getCompanyId()),
-                job.getTitle(),
-                job.getExperienceLevel(),
-                job.getEmploymentType(),
-                job.getLocation(),
-                job.getDetailUrl()
-            ))
+            .map(job -> {
+                CompanyEntity company = companyMap.get(job.getCompanyId());
+                return new JobPosting(
+                    company.getName(),
+                    job.getTitle(),
+                    job.getExperienceLevel(),
+                    job.getEmploymentType(),
+                    job.getLocation(),
+                    buildRedirectUrl(company.getRecruitmentUrl(), job.getDetailUrl())
+                );
+            })
             .toList();
 
         return new PageImpl<>(jobPostings, pageable, jobPostingEntityList.getTotalElements());
