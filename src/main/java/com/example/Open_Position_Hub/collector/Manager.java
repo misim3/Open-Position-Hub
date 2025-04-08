@@ -34,16 +34,19 @@ public class Manager {
     @Scheduled(fixedRate = 86400000) // 24시간 마다 실행
     public void process() {
         System.out.println("Processing...");
-        List<CompanyEntity> companies = companyRepository.findAll();
+//        List<CompanyEntity> companies = companyRepository.findAll();
+        List<CompanyEntity> companies = companyRepository.findAllByRecruitmentPlatform("그리팅");
         companies.forEach(company -> saveJobPostings(processJobScraping(company)));
         System.out.println("Done!");
     }
 
     private List<JobPostingEntity> processJobScraping(CompanyEntity company) {
 
+        logger.info("{} Processing job scraping...", company.getName());
+
         Optional<Document> doc = scraper.fetchHtml(company.getRecruitmentUrl());
         if (doc.isPresent()) {
-            if (company.getRecruitmentPlatform().equals("greeting")) {
+            if (company.getRecruitmentPlatform().equals("그리팅")) {
                 return extractor.extractGreeting2(doc.get(), company.getRecruitmentUrl(),
                     company.getId());
             } else {
@@ -74,7 +77,5 @@ public class Manager {
         } else {
             logger.info("No new job postings to save. All are duplicates.");
         }
-        
-        jobPostingRepository.saveAll(scrapedJobPostings);
     }
 }
