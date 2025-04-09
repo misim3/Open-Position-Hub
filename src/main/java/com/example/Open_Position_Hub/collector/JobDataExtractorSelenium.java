@@ -27,12 +27,6 @@ public class JobDataExtractorSelenium {
 
     public Map<String, List<String>> handleFilterBar(String url) {
 
-        // ChromeDriver 경로 설정 (본인의 환경에 맞게 수정)
-        String driverPath = System.setProperty("webdriver.chrome.driver", "C:\\Users\\sim00\\Downloads\\chromedriver-win64\\chromedriver-win64\\chromedriver.exe");
-        if (driverPath == null || driverPath.isBlank()) {
-            logger.error("ChromeDriver path is not set. Please configure the system property: 'webdriver.chrome.driver'.");
-        }
-
         // Chrome 옵션 설정
         ChromeOptions options = new ChromeOptions();
         options.addArguments("--headless");  // 헤드리스 모드 (UI 없이 실행)
