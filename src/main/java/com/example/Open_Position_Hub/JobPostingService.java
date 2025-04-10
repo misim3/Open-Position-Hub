@@ -134,12 +134,16 @@ public class JobPostingService {
 
         Map<String, List<String>> filters = new HashMap<>();
 
-        filters.put("titles", jobPostingRepository.findDistinctTitles());
+        filters.put("titles", jobPostingRepository.findDistinctTitles().stream()
+            .sorted()
+            .toList()
+        );
 
         filters.put("companyNames", jobPostingRepository.findDistinctCompanyIds().stream()
             .map(id -> companyRepository.findById(id)
                 .map(CompanyEntity::getName)
                 .orElseThrow(() -> new RuntimeException("Not Found Company By CompanyId while getFilterOptions.")))
+            .sorted()
             .toList()
         );
 
