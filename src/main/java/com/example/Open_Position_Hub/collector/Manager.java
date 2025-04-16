@@ -31,7 +31,7 @@ public class Manager {
         this.companyRepository = companyRepository;
     }
 
-    @Scheduled(fixedRate = 86400000) // 24시간 마다 실행
+    @Scheduled(cron = "0 0 3 * * *")
     public void process() {
         System.out.println("Processing...");
 //        List<CompanyEntity> companies = companyRepository.findAll();
