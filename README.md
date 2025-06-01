@@ -11,10 +11,8 @@
 ### 🔧 기술 스택
 
 - Back-end: Java, Spring Boot, MySQL
-- Crawling: Jsoup, Selenium
+- Scraping: Jsoup, Selenium
 - Infra: AWS EC2, RDS, Nginx, Ubuntu
-- 테스트: JUnit, k6
-- 기타: GitHub Actions (CI), Linux Shell Script
 
 ### 🎯 주요 기능
 
