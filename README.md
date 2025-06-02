@@ -30,3 +30,7 @@
 - 프리티어 내에서 서버 자원 운영 최적화 (SWAP 메모리 추가)
 
 ![oph drawio (1)](https://github.com/user-attachments/assets/d2a2ab5d-2fff-443f-a2e5-2959d79f31d2)
+
+
+### 참고자료
+[포트폴리오](https://curious-raver-f98.notion.site/2032515049b9805cb3dac1f4ba2ce135#2032515049b9801395d8d1163b5f01ef)
