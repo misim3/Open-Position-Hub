@@ -8,7 +8,7 @@ on:
 jobs:
   deploy:
     name: Deploy
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     environment: production
 
     steps:
@@ -34,7 +34,7 @@ jobs:
           username: ${{ secrets.EC2_A_USER }}
           key: ${{ secrets.EC2_A_SSH_KEY }}
           source: "./build/libs/*.jar"
-          target: "/home/ubuntu/app"
+          target: "/home/ubuntu/Open-Position-Hub"
 
       - name: Restart Spring Boot on EC2
         uses: appleboy/ssh-action@v1.0.3
@@ -44,5 +44,5 @@ jobs:
           key: ${{ secrets.EC2_A_SSH_KEY }}
           script: |
             sudo systemctl daemon-reload
-            sudo systemctl restart your-spring-app.service
-            sudo systemctl status your-spring-app.service --no-pager
+            sudo systemctl restart oph
+            sudo systemctl status oph --no-pager
