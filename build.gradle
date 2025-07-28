@@ -35,4 +35,11 @@ dependencies {
 tasks.named('test') {
 	useJUnitPlatform()
 	systemProperty "spring.profiles.active", "test"
+	outputs.upToDateWhen { false }
+	maxParallelForks = 1
+}
+
+tasks.named('bootJar') {
+	reproducibleFileOrder = true
+	preserveFileTimestamps = false
 }
