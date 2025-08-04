@@ -12,9 +12,6 @@ jobs:
     environment: production
 
     steps:
-      - name: 현재 유저 확인 (whoami)
-        run: whoami
-
       - name: Run deploy.sh on EC2-B
         run: |
           ssh ubuntu@${{ secrets.EC2_A_HOST }} "bash /home/ubuntu/deploy.sh"
