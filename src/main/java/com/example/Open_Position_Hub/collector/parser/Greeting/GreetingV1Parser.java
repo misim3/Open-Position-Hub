@@ -16,7 +16,7 @@ import org.springframework.stereotype.Component;
 public class GreetingV1Parser implements JobParser {
 
     private static final String key = "그리팅/V1";
-    private enum Field { CATEGORY, EXPERIENCE, EMPLOYMENT, LOCATION };
+    private enum Field { CATEGORY, EXPERIENCE, EMPLOYMENT, LOCATION }
 
     @Override
     public String layoutKey() {
