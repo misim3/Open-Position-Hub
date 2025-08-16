@@ -9,9 +9,11 @@ import org.springframework.stereotype.Component;
 @Component
 public class GreetingV2Detector implements LayoutDetector {
 
+    private static final String key = "그리팅";
+
     @Override
     public String platformKey() {
-        return "그리팅";
+        return key;
     }
 
     @Override
@@ -23,7 +25,7 @@ public class GreetingV2Detector implements LayoutDetector {
     public Optional<String> detect(Document doc, URI pageUrl) {
         Element listViewA = doc.selectFirst("div[listviewtype='a']");
         if (listViewA != null) {
-            return Optional.of("V2");
+            return Optional.of(platformKey() + "/V2");
         }
         return Optional.empty();
     }
