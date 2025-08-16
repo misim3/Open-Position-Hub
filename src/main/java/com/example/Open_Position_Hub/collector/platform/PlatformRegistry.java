@@ -1,4 +1,4 @@
-package com.example.Open_Position_Hub.collector;
+package com.example.Open_Position_Hub.collector.platform;
 
 import java.util.List;
 import org.springframework.stereotype.Component;

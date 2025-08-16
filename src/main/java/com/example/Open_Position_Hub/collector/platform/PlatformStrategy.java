@@ -1,4 +1,4 @@
-package com.example.Open_Position_Hub.collector;
+package com.example.Open_Position_Hub.collector.platform;
 
 import com.example.Open_Position_Hub.db.CompanyEntity;
 import com.example.Open_Position_Hub.db.JobPostingEntity;
