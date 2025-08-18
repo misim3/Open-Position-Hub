@@ -3,6 +3,7 @@ package com.example.Open_Position_Hub.collector.platform;
 import com.example.Open_Position_Hub.db.CompanyEntity;
 import com.example.Open_Position_Hub.db.JobPostingEntity;
 import java.util.List;
+import org.jsoup.nodes.Document;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -16,7 +17,7 @@ public class GreetingStrategy implements PlatformStrategy {
     }
 
     @Override
-    public List<JobPostingEntity> scrape(CompanyEntity company) throws Exception {
+    public List<JobPostingEntity> scrape(Document doc, CompanyEntity company) {
 
         return List.of();
     }
