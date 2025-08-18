@@ -10,7 +10,6 @@ import java.util.Optional;
 import org.jsoup.nodes.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -23,9 +22,9 @@ public class Manager {
     private final CompanyRepository companyRepository;
     private final PlatformRegistry platformRegistry;
 
-    public Manager(Scraper scraper, Extractor extractor,
-        @Autowired JobPostingRepository jobPostingRepository,
-        @Autowired CompanyRepository companyRepository,
+    public Manager(Scraper scraper,
+        JobPostingRepository jobPostingRepository,
+        CompanyRepository companyRepository,
         PlatformRegistry platformRegistry) {
         this.scraper = scraper;
         this.jobPostingRepository = jobPostingRepository;
