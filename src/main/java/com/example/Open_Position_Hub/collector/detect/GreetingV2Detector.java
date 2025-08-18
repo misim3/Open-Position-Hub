@@ -22,7 +22,7 @@ public class GreetingV2Detector implements LayoutDetector {
     }
 
     @Override
-    public Optional<String> detect(Document doc, URI pageUrl) {
+    public Optional<String> detect(Document doc) {
         Element listViewA = doc.selectFirst("div[listviewtype='a']");
         if (listViewA != null) {
             return Optional.of(platformKey() + "/V2");

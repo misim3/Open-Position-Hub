@@ -8,6 +8,6 @@ public interface LayoutDetector {
 
     String platformKey();
     int order();
-    Optional<String> detect(Document doc, URI pageUrl);
+    Optional<String> detect(Document doc);
 
 }

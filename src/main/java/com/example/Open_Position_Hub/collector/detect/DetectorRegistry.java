@@ -6,5 +6,5 @@ import org.jsoup.nodes.Document;
 
 public interface DetectorRegistry {
 
-    Optional<String> detect(String platformKey, Document doc, URI pageUrl);
+    Optional<String> detect(String platformKey, Document doc);
 }

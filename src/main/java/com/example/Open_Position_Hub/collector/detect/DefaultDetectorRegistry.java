@@ -27,11 +27,11 @@ public class DefaultDetectorRegistry implements DetectorRegistry {
     }
 
     @Override
-    public Optional<String> detect(String platformKey, Document doc, URI pageUrl) {
+    public Optional<String> detect(String platformKey, Document doc) {
         List<LayoutDetector> candidates = byPlatform.getOrDefault(platformKey, List.of());
         for (LayoutDetector d : candidates) {
             try {
-                Optional<String> hit = d.detect(doc, pageUrl);
+                Optional<String> hit = d.detect(doc);
                 if (hit.isPresent()) {
                     return hit;
                 }
