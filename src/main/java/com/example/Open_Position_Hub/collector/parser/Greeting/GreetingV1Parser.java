@@ -24,7 +24,7 @@ public class GreetingV1Parser implements JobParser {
     }
 
     @Override
-    public List<JobPostingEntity> parse(Document doc, CompanyEntity company) throws Exception {
+    public List<JobPostingEntity> parse(Document doc, CompanyEntity company) {
 
         Map<String, List<String>> options = handleSideBar(doc.select("div.sc-4384c63b-0.dpoYEo").select("div.sc-f960cb4f-0.fyUmrl"));
 

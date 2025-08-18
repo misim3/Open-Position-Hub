@@ -30,7 +30,7 @@ public class GreetingV2Parser implements JobParser {
     }
 
     @Override
-    public List<JobPostingEntity> parse(Document doc, CompanyEntity company) throws Exception {
+    public List<JobPostingEntity> parse(Document doc, CompanyEntity company) {
 
         Map<String, List<String>> options = jobDataExtractorSelenium.handleFilterBar(company.getRecruitmentUrl());
 

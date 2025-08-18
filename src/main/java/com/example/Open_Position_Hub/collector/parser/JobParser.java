@@ -9,6 +9,6 @@ public interface JobParser {
 
     String layoutKey();
 
-    List<JobPostingEntity> parse(Document doc, CompanyEntity company) throws Exception;
+    List<JobPostingEntity> parse(Document doc, CompanyEntity company);
 
 }
