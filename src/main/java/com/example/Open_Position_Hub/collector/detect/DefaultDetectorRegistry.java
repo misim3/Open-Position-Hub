@@ -1,6 +1,5 @@
 package com.example.Open_Position_Hub.collector.detect;
 
-import java.net.URI;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
