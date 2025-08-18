@@ -1,5 +1,6 @@
 package com.example.Open_Position_Hub.collector.parser.Greeting;
 
+import com.example.Open_Position_Hub.collector.JobDataExtractorSelenium;
 import com.example.Open_Position_Hub.collector.parser.JobParser;
 import com.example.Open_Position_Hub.db.CompanyEntity;
 import com.example.Open_Position_Hub.db.JobPostingEntity;
@@ -17,6 +18,11 @@ public class GreetingV2Parser implements JobParser {
 
     private static final String key = "그리팅/V2";
     private enum Field { CATEGORY, EXPERIENCE, EMPLOYMENT, LOCATION }
+    private final JobDataExtractorSelenium jobDataExtractorSelenium;
+
+    public GreetingV2Parser(JobDataExtractorSelenium jobDataExtractorSelenium) {
+        this.jobDataExtractorSelenium = jobDataExtractorSelenium;
+    }
 
     @Override
     public String layoutKey() {
@@ -24,18 +30,11 @@ public class GreetingV2Parser implements JobParser {
     }
 
     @Override
-    public List<JobPostingEntity> parse(Document doc, CompanyEntity company) throws Exception {
+    public List<JobPostingEntity> parse(Document doc, String url, CompanyEntity company) throws Exception {
 
-        Map<String, List<String>> options = handleFilterBar(doc);
+        Map<String, List<String>> options = jobDataExtractorSelenium.handleFilterBar(url);
 
         return handleJobCards(doc.select("div.sc-9b56f69e-0.enoHnQ"), options, company.getId());
-    }
-
-    private Map<String, List<String>> handleFilterBar(Document doc) {
-
-        Map<String, List<String>> options = new HashMap<>();
-
-        return options;
     }
 
     private List<JobPostingEntity> handleJobCards(Elements links, Map<String, List<String>> options, Long companyId) {
