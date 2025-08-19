@@ -1,5 +1,6 @@
 package com.example.Open_Position_Hub.collector;
 
+import com.example.Open_Position_Hub.collector.platform.PlatformRegistry;
 import com.example.Open_Position_Hub.db.CompanyEntity;
 import com.example.Open_Position_Hub.db.CompanyRepository;
 import com.example.Open_Position_Hub.db.JobPostingEntity;
@@ -9,7 +10,6 @@ import java.util.Optional;
 import org.jsoup.nodes.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -18,17 +18,18 @@ public class Manager {
 
     private static final Logger logger = LoggerFactory.getLogger(Manager.class);
     private final Scraper scraper;
-    private final Extractor extractor;
     private final JobPostingRepository jobPostingRepository;
     private final CompanyRepository companyRepository;
+    private final PlatformRegistry platformRegistry;
 
-    public Manager(Scraper scraper, Extractor extractor,
-        @Autowired JobPostingRepository jobPostingRepository,
-        @Autowired CompanyRepository companyRepository) {
+    public Manager(Scraper scraper,
+        JobPostingRepository jobPostingRepository,
+        CompanyRepository companyRepository,
+        PlatformRegistry platformRegistry) {
         this.scraper = scraper;
-        this.extractor = extractor;
         this.jobPostingRepository = jobPostingRepository;
         this.companyRepository = companyRepository;
+        this.platformRegistry = platformRegistry;
     }
 
     @Scheduled(cron = "0 0 3 * * *")
@@ -45,13 +46,9 @@ public class Manager {
         logger.info("{} Processing job scraping...", company.getName());
 
         Optional<Document> doc = scraper.fetchHtml(company.getRecruitmentUrl());
+
         if (doc.isPresent()) {
-            if (company.getRecruitmentPlatform().equals("그리팅")) {
-                return extractor.extractGreeting2(doc.get(), company.getRecruitmentUrl(),
-                    company.getId());
-            } else {
-                logger.warn("Unsupported platform: {}", company.getRecruitmentPlatform());
-            }
+            return platformRegistry.getStrategy(company.getRecruitmentPlatform()).scrape(doc.get(), company);
         }
 
         return List.of();
