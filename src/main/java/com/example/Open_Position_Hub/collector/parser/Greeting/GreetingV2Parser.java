@@ -127,7 +127,7 @@ public class GreetingV2Parser implements JobParser {
                         try {
                             options.add(option.getText());
                         } catch (StaleElementReferenceException e) {
-                            logger.warn("옵션 stale됨 → 필터 '{}'", name);
+                            logger.warn("옵션 stale됨 → 필터 {}, URL: {}", name, driver.getCurrentUrl());
                         }
                     }
 
@@ -135,14 +135,14 @@ public class GreetingV2Parser implements JobParser {
                     driver.findElement(By.tagName("body")).sendKeys(Keys.ESCAPE);
 
                 } catch (Exception e) {
-                    logger.error("에러 발생 (필터 '{}')", name, e);
+                    logger.error("에러 발생 필터: {}, URL: {}", name, driver.getCurrentUrl(), e);
                 }
 
                 filterOptions.put(name, options);
             }
 
         } catch (Exception e) {
-            logger.error("Unknown error occurred during filter option extraction.");
+            logger.error("Unknown error occurred during filter option extraction. URL: {}", driver.getCurrentUrl(), e);
         }
     }
 
