@@ -10,12 +10,15 @@ import java.util.Map;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 @Component
 public class GreetingV1Parser implements JobParser {
 
     private static final String key = "그리팅/V1";
+    private static final Logger logger = LoggerFactory.getLogger(GreetingV1Parser.class);
     private enum Field { CATEGORY, EXPERIENCE, EMPLOYMENT, LOCATION }
 
     @Override
@@ -27,8 +30,16 @@ public class GreetingV1Parser implements JobParser {
     public List<JobPostingEntity> parse(Document doc, CompanyEntity company) {
 
         Map<String, List<String>> options = handleSideBar(doc.select("div.sc-4384c63b-0.dpoYEo").select("div.sc-f960cb4f-0.fyUmrl"));
+        if (options.isEmpty()) {
+            logger.error("HTML structure changed: Unable to find elements(handleSideBar) for Company: {}, URL: {}", company.getName(), company.getRecruitmentUrl());
+            return List.of();
+        }
 
-        return handleJobCards(doc.select("div.sc-9b56f69e-0.enoHnQ").select("a"), options, company.getId());
+        List<JobPostingEntity> jobPostingEntities = handleJobCards(doc.select("div.sc-9b56f69e-0.enoHnQ").select("a"), options, company.getId());
+        if (jobPostingEntities.isEmpty()) {
+            logger.error("HTML structure changed: Unable to find elements(handleJobCards) for Company: {}, URL: {}", company.getName(), company.getRecruitmentUrl());
+        }
+        return jobPostingEntities;
     }
 
     private Map<String, List<String>> handleSideBar(Elements categories) {
@@ -54,9 +65,7 @@ public class GreetingV1Parser implements JobParser {
     private List<JobPostingEntity> handleJobCards(Elements links, Map<String, List<String>> options, Long companyId) {
 
         List<JobPostingEntity> jobPostingEntities = new ArrayList<>();
-        if (options.isEmpty()) {
-            return jobPostingEntities;
-        }
+
         Map<String, Field> textToField = buildTextToField(options);
 
         for (Element link : links) {

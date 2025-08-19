@@ -43,8 +43,16 @@ public class GreetingV2Parser implements JobParser {
     public List<JobPostingEntity> parse(Document doc, CompanyEntity company) {
 
         Map<String, List<String>> options = handleFilterBar(company.getRecruitmentUrl());
+        if (options.isEmpty()) {
+            logger.error("HTML structure changed: Unable to find elements(handleSideBar) for Company: {}, URL: {}", company.getName(), company.getRecruitmentUrl());
+            return List.of();
+        }
 
-        return handleJobCards(doc.select("div.sc-9b56f69e-0.enoHnQ"), options, company.getId());
+        List<JobPostingEntity> jobPostingEntities = handleJobCards(doc.select("div.sc-9b56f69e-0.enoHnQ"), options, company.getId());
+        if (jobPostingEntities.isEmpty()) {
+            logger.error("HTML structure changed: Unable to find elements(handleJobCards) for Company: {}, URL: {}", company.getName(), company.getRecruitmentUrl());
+        }
+        return jobPostingEntities;
     }
 
     public Map<String, List<String>> handleFilterBar(String url) {
@@ -170,9 +178,7 @@ public class GreetingV2Parser implements JobParser {
     private List<JobPostingEntity> handleJobCards(Elements links, Map<String, List<String>> options, Long companyId) {
 
         List<JobPostingEntity> jobPostingEntities = new ArrayList<>();
-        if (options.isEmpty()) {
-            return jobPostingEntities;
-        }
+
         Map<String, Field> textToField = buildTextToField(options);
 
         for (Element link : links) {
