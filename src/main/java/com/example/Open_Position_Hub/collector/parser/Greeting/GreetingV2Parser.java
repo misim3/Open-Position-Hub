@@ -59,14 +59,19 @@ public class GreetingV2Parser implements JobParser {
         WebDriver driver = new ChromeDriver(options);
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(5));  // 명시적 대기 설정
 
-        Map<String, List<String>> filterOptions = null;
+        Map<String, List<String>> filterOptions = new LinkedHashMap<>();
+
+        if (url == null || url.isEmpty()) {
+            driver.quit();
+            return filterOptions;
+        }
 
         try {
             // 1. 채용 공고 페이지 접속
             driver.get(url);
 
             // 2. 필터바의 선택지 가져오기 (업데이트된 방식)
-            filterOptions = getFilterOptions(driver, wait);
+            getFilterOptions(driver, wait, filterOptions);
 
         } catch (TimeoutException e) {
             logger.warn("TimeoutException: Page loading timeout exceeded. URL: {}", url, e);
@@ -84,10 +89,7 @@ public class GreetingV2Parser implements JobParser {
     }
 
     // 특정 필터(구분, 직군, 경력사항 등)의 선택지를 가져오는 메서드
-    private Map<String, List<String>> getFilterOptions(WebDriver driver,
-        WebDriverWait wait) {
-
-        Map<String, List<String>> map = new LinkedHashMap<>();
+    private void getFilterOptions(WebDriver driver, WebDriverWait wait,  Map<String, List<String>> filterOptions) {
 
         try {
             // 필터 항목 추출
@@ -128,13 +130,12 @@ public class GreetingV2Parser implements JobParser {
                     logger.error("에러 발생 (필터 '{}')", name, e);
                 }
 
-                map.put(name, options);
+                filterOptions.put(name, options);
             }
 
         } catch (Exception e) {
             logger.error("Unknown error occurred during filter option extraction.");
         }
-        return map;
     }
 
     private List<WebElement> waitForStableOptions(WebDriver driver, By optionSelector, int maxTries, long intervalMs) {
@@ -169,6 +170,9 @@ public class GreetingV2Parser implements JobParser {
     private List<JobPostingEntity> handleJobCards(Elements links, Map<String, List<String>> options, Long companyId) {
 
         List<JobPostingEntity> jobPostingEntities = new ArrayList<>();
+        if (options.isEmpty()) {
+            return jobPostingEntities;
+        }
         Map<String, Field> textToField = buildTextToField(options);
 
         for (Element link : links) {

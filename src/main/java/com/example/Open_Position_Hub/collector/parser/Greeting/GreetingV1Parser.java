@@ -54,6 +54,9 @@ public class GreetingV1Parser implements JobParser {
     private List<JobPostingEntity> handleJobCards(Elements links, Map<String, List<String>> options, Long companyId) {
 
         List<JobPostingEntity> jobPostingEntities = new ArrayList<>();
+        if (options.isEmpty()) {
+            return jobPostingEntities;
+        }
         Map<String, Field> textToField = buildTextToField(options);
 
         for (Element link : links) {
