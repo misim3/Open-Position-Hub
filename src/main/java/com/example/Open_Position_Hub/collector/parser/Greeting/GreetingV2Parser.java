@@ -62,6 +62,7 @@ public class GreetingV2Parser implements JobParser {
         options.addArguments("--headless");  // 헤드리스 모드 (UI 없이 실행)
         options.addArguments("--disable-gpu");
         options.addArguments("--no-sandbox");
+        options.addArguments("--disable-dev-shm-usage");
 
         // WebDriver 시작
         WebDriver driver = new ChromeDriver(options);
