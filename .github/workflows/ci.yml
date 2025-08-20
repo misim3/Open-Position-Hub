@@ -20,6 +20,11 @@ jobs:
           java-version: '17'
           distribution: 'corretto'
 
+      - name: Setup Chrome
+        uses: browser-actions/setup-chrome@v1
+        with:
+          chrome-version: stable
+
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
@@ -27,4 +32,6 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: Build with Gradle
-        run: ./gradlew build
+        env:
+          SE_DEBUG: 'true'
+        run: ./gradlew build -i --stacktrace
