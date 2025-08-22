@@ -22,58 +22,76 @@ class GreetingV1ParserTest {
     }
 
     @Test
-    @DisplayName("사이드바 옵션과 카드가 매칭되면 공고를 파싱한다")
+    @DisplayName("사이드바 옵션과 카드가 매칭되면 공고를 파싱한다 (ul a[href] 구조 대응)")
     void parse_parsesCardsWithSidebarOptions() {
         GreetingV1Parser parser = new GreetingV1Parser();
 
-        // 사이드바(카테고리별 체크박스) + 카드 2개
+        // 파서의 셀렉터와 일치하는 HTML 구성
+        // - 사이드바: div.sc-9b56f69e-0.imkSIw.sc-9b6acf96-0.mgFVD > div.sc-c7f48e72-0.biJzyB
+        //   이름: span.sc-86b147bc-0.jrtDxx
+        //   값: label[role='checkbox'] > span.sc-86b147bc-0.cvrGje
+        // - 카드 컨테이너: div.sc-9b56f69e-0.enoHnQ
+        //   링크: ul a[href]
+        //   제목: span.sc-86b147bc-0.gIOkaZ.sc-f484a550-1.gMeHeg
+        //   상세: span.sc-86b147bc-0.bugutw.sc-708ae078-1.gAEjfw > span.sc-708ae078-3.hBUoLe
         String html = """
-        <div class="sc-4384c63b-0 dpoYEo">
-          <div class="sc-f960cb4f-0 fyUmrl">
+        <div class="sc-9b56f69e-0 imkSIw sc-9b6acf96-0 mgFVD">
+          <div class="sc-c7f48e72-0 biJzyB">
             <span class="sc-86b147bc-0 jrtDxx">직군</span>
-            <label role="checkbox">백엔드</label>
+            <label role="checkbox"><span class="sc-86b147bc-0 cvrGje">백엔드</span></label>
           </div>
-          <div class="sc-f960cb4f-0 fyUmrl">
+          <div class="sc-c7f48e72-0 biJzyB">
             <span class="sc-86b147bc-0 jrtDxx">경력사항</span>
-            <label role="checkbox">신입</label>
-            <label role="checkbox">3년 이상</label>
+            <label role="checkbox"><span class="sc-86b147bc-0 cvrGje">신입</span></label>
+            <label role="checkbox"><span class="sc-86b147bc-0 cvrGje">3년 이상</span></label>
           </div>
-          <div class="sc-f960cb4f-0 fyUmrl">
+          <div class="sc-c7f48e72-0 biJzyB">
             <span class="sc-86b147bc-0 jrtDxx">고용형태</span>
-            <label role="checkbox">정규직</label>
+            <label role="checkbox"><span class="sc-86b147bc-0 cvrGje">정규직</span></label>
           </div>
-          <div class="sc-f960cb4f-0 fyUmrl">
+          <div class="sc-c7f48e72-0 biJzyB">
             <span class="sc-86b147bc-0 jrtDxx">근무지</span>
-            <label role="checkbox">서울</label>
+            <label role="checkbox"><span class="sc-86b147bc-0 cvrGje">서울</span></label>
           </div>
         </div>
 
         <div class="sc-9b56f69e-0 enoHnQ">
-          <a href="https://example.com/j1">
-            <span class="sc-86b147bc-0 gIOkaZ sc-d200d649-1 dKCwbm">백엔드 개발자</span>
-            <span class="sc-be6466ed-3 bDOHei">백엔드</span>
-            <span class="sc-be6466ed-3 bDOHei">신입</span>
-            <span class="sc-be6466ed-3 bDOHei">정규직</span>
-            <span class="sc-be6466ed-3 bDOHei">서울</span>
-          </a>
-          <a href="https://example.com/j2">
-            <span class="sc-86b147bc-0 gIOkaZ sc-d200d649-1 dKCwbm">서버 개발자</span>
-            <span class="sc-be6466ed-3 bDOHei">백엔드</span>
-            <span class="sc-be6466ed-3 bDOHei">3년 이상</span>
-            <span class="sc-be6466ed-3 bDOHei">정규직</span>
-            <span class="sc-be6466ed-3 bDOHei">서울</span>
-          </a>
+          <ul>
+            <li>
+              <a href="https://example.com/j1">
+                <span class="sc-86b147bc-0 gIOkaZ sc-f484a550-1 gMeHeg">백엔드 개발자</span>
+                <span class="sc-86b147bc-0 bugutw sc-708ae078-1 gAEjfw"><span class="sc-708ae078-3 hBUoLe">백엔드</span></span>
+                <span class="sc-86b147bc-0 bugutw sc-708ae078-1 gAEjfw"><span class="sc-708ae078-3 hBUoLe">신입</span></span>
+                <span class="sc-86b147bc-0 bugutw sc-708ae078-1 gAEjfw"><span class="sc-708ae078-3 hBUoLe">정규직</span></span>
+                <span class="sc-86b147bc-0 bugutw sc-708ae078-1 gAEjfw"><span class="sc-708ae078-3 hBUoLe">서울</span></span>
+              </a>
+            </li>
+            <li>
+              <a href="https://example.com/j2">
+                <span class="sc-86b147bc-0 gIOkaZ sc-f484a550-1 gMeHeg">서버 개발자</span>
+                <span class="sc-86b147bc-0 bugutw sc-708ae078-1 gAEjfw"><span class="sc-708ae078-3 hBUoLe">백엔드</span></span>
+                <span class="sc-86b147bc-0 bugutw sc-708ae078-1 gAEjfw"><span class="sc-708ae078-3 hBUoLe">3년 이상</span></span>
+                <span class="sc-86b147bc-0 bugutw sc-708ae078-1 gAEjfw"><span class="sc-708ae078-3 hBUoLe">정규직</span></span>
+                <span class="sc-86b147bc-0 bugutw sc-708ae078-1 gAEjfw"><span class="sc-708ae078-3 hBUoLe">서울</span></span>
+              </a>
+            </li>
+          </ul>
         </div>
         """;
 
         Document doc = Jsoup.parse(html);
         CompanyEntity company = mock(CompanyEntity.class);
         when(company.getId()).thenReturn(42L);
+        when(company.getName()).thenReturn("ExampleCo");
+        when(company.getRecruitmentUrl()).thenReturn("https://greeting.example/jobs");
 
         List<JobPostingEntity> result = parser.parse(doc, company);
 
         assertNotNull(result);
-        assertEquals(2, result.size(), "a 태그 2개 → 공고 2건");
+        assertEquals(2, result.size(), "ul a[href] 구조에서 2건이 파싱되어야 한다");
+        // 필요 시 추가 검증:
+        // assertEquals("백엔드 개발자", result.get(0).getTitle());
+        // assertEquals("https://example.com/j1", result.get(0).getUrl());
     }
 
     @Test
@@ -82,6 +100,9 @@ class GreetingV1ParserTest {
         GreetingV1Parser parser = new GreetingV1Parser();
         Document doc = Jsoup.parse("<div id='empty'></div>");
         CompanyEntity company = mock(CompanyEntity.class);
+        when(company.getName()).thenReturn("ExampleCo");
+        when(company.getRecruitmentUrl()).thenReturn("https://greeting.example/jobs");
+
         List<JobPostingEntity> result = parser.parse(doc, company);
         assertTrue(result.isEmpty());
     }
