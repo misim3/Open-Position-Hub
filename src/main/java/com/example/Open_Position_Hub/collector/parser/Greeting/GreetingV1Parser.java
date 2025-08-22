@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
@@ -29,13 +30,13 @@ public class GreetingV1Parser implements JobParser {
     @Override
     public List<JobPostingEntity> parse(Document doc, CompanyEntity company) {
 
-        Map<String, List<String>> options = handleSideBar(doc.select("div.sc-4384c63b-0.dpoYEo").select("div.sc-f960cb4f-0.fyUmrl"));
+        Map<String, List<String>> options = handleSideBar(doc.select("div.sc-9b56f69e-0.imkSIw.sc-9b6acf96-0.mgFVD").select("div.sc-c7f48e72-0.biJzyB"));
         if (options.isEmpty()) {
             logger.error("HTML structure changed: Unable to find elements(handleSideBar) for Company: {}, URL: {}", company.getName(), company.getRecruitmentUrl());
             return List.of();
         }
 
-        List<JobPostingEntity> jobPostingEntities = handleJobCards(doc.select("div.sc-9b56f69e-0.enoHnQ").select("a"), options, company.getId());
+        List<JobPostingEntity> jobPostingEntities = handleJobCards(Objects.requireNonNull(doc.selectFirst("div.sc-9b56f69e-0.enoHnQ")), options, company.getId());
         if (jobPostingEntities.isEmpty()) {
             logger.error("HTML structure changed: Unable to find elements(handleJobCards) for Company: {}, URL: {}", company.getName(), company.getRecruitmentUrl());
         }
@@ -53,25 +54,26 @@ public class GreetingV1Parser implements JobParser {
 
             List<String> values = new ArrayList<>();
             for (Element check : checks) {
-                values.add(check.text());
+                values.add(check.select("span.sc-86b147bc-0.cvrGje").text());
             }
-
             options.put(name, values);
         }
 
         return options;
     }
 
-    private List<JobPostingEntity> handleJobCards(Elements links, Map<String, List<String>> options, Long companyId) {
+    private List<JobPostingEntity> handleJobCards(Element container, Map<String, List<String>> options, Long companyId) {
 
         List<JobPostingEntity> jobPostingEntities = new ArrayList<>();
 
         Map<String, Field> textToField = buildTextToField(options);
 
+        Elements links = container.select("ul a[href]");
+
         for (Element link : links) {
             String href = link.attr("href");
-            String title = link.select("span.sc-86b147bc-0.gIOkaZ.sc-d200d649-1.dKCwbm").text();
-            Elements details = link.select("span.sc-be6466ed-3.bDOHei");
+            String title = link.select("span.sc-86b147bc-0.gIOkaZ.sc-f484a550-1.gMeHeg").text();
+            Elements details = link.select("span.sc-86b147bc-0.bugutw.sc-708ae078-1.gAEjfw");
 
             String category = "";
             String experienceLevel = "";
@@ -79,7 +81,7 @@ public class GreetingV1Parser implements JobParser {
             String location = "";
 
             for (Element detail : details) {
-                String text = detail.text();
+                String text = detail.select("span.sc-708ae078-3.hBUoLe").text();
 
                 Field f = textToField.get(text);
                 if (f != null) {
