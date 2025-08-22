@@ -49,7 +49,7 @@ public class GreetingV2Parser implements JobParser {
 
         Map<String, List<String>> options = handleFilterBar(company.getRecruitmentUrl());
         if (options.isEmpty()) {
-            logger.error("HTML structure changed: Unable to find elements(handleSideBar) for Company: {}, URL: {}", company.getName(), company.getRecruitmentUrl());
+            logger.error("HTML structure changed: Unable to find elements(handleFilterBar) for Company: {}, URL: {}", company.getName(), company.getRecruitmentUrl());
             return List.of();
         }
 
