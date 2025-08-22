@@ -9,11 +9,16 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.openqa.selenium.By;
+import org.openqa.selenium.ElementClickInterceptedException;
+import org.openqa.selenium.ElementNotInteractableException;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.Keys;
+import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriver;
@@ -21,6 +26,7 @@ import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;
@@ -48,7 +54,8 @@ public class GreetingV2Parser implements JobParser {
             return List.of();
         }
 
-        List<JobPostingEntity> jobPostingEntities = handleJobCards(doc.select("div.sc-9b56f69e-0.enoHnQ"), options, company.getId());
+        List<JobPostingEntity> jobPostingEntities = handleJobCards(
+            Objects.requireNonNull(doc.selectFirst("div.sc-9b56f69e-0.enoHnQ")), options, company.getId());
         if (jobPostingEntities.isEmpty()) {
             logger.error("HTML structure changed: Unable to find elements(handleJobCards) for Company: {}, URL: {}", company.getName(), company.getRecruitmentUrl());
         }
@@ -63,6 +70,7 @@ public class GreetingV2Parser implements JobParser {
         options.addArguments("--disable-gpu");
         options.addArguments("--no-sandbox");
         options.addArguments("--disable-dev-shm-usage");
+        options.addArguments("--window-size=1920,1080");
 
         // WebDriver 시작
         WebDriver driver = new ChromeDriver(options);
@@ -98,94 +106,79 @@ public class GreetingV2Parser implements JobParser {
     }
 
     // 특정 필터(구분, 직군, 경력사항 등)의 선택지를 가져오는 메서드
-    private void getFilterOptions(WebDriver driver, WebDriverWait wait,  Map<String, List<String>> filterOptions) {
+    private void getFilterOptions(WebDriver driver, WebDriverWait wait, Map<String, List<String>> filterOptions) {
+        // 필터 라벨(span) 로드 대기
+        wait.until(ExpectedConditions.presenceOfAllElementsLocatedBy(By.cssSelector("span.sc-86b147bc-0.ghZIoe")));
 
-        try {
-            // 필터 항목 추출
-            List<WebElement> filters = driver.findElements(By.cssSelector("span.sc-86b147bc-0.ghZIoe"));
+        for (int i = 0; ; i++) {
+            List<WebElement> labels = driver.findElements(By.cssSelector("span.sc-86b147bc-0.ghZIoe"));
+            // 표시 중인 라벨만 대상으로
+            labels = labels.stream().filter(WebElement::isDisplayed).toList();
+            if (i >= labels.size()) break; // 종료
 
-            for (WebElement filter : filters) {
+            WebElement label = labels.get(i);
+            String text = label.getText();
+            String name = text.replaceAll("\\s*\\(\\d+\\)", "").trim();
 
-                String text = filter.getText();
-                String name = text.replaceAll("\\s*\\(\\d+\\)", "");
-
-                List<String> options = new ArrayList<>();
-
-                try {
-                    filter.click();
-
-                    wait.until(ExpectedConditions.presenceOfElementLocated(By.id("dropdown-portal")));
-
-                    // 옵션들이 "안정"될 때까지 대기
-                    List<WebElement> optionElements = waitForStableOptions(
-                        driver,
-                        By.cssSelector("#dropdown-portal span.sc-86b147bc-0.ONaOy"),
-                        10,   // 최대 10번 확인
-                        200   // 200ms 간격
-                    );
-
-                    for (WebElement option : optionElements) {
-                        try {
-                            options.add(option.getText());
-                        } catch (StaleElementReferenceException e) {
-                            logger.warn("옵션 stale됨 → 필터 {}, URL: {}", name, driver.getCurrentUrl());
-                        }
-                    }
-
-                    // 드롭다운 닫기 (외부 클릭 or ESC)
-                    driver.findElement(By.tagName("body")).sendKeys(Keys.ESCAPE);
-
-                } catch (Exception e) {
-                    logger.error("에러 발생 필터: {}, URL: {}", name, driver.getCurrentUrl(), e);
-                }
-
-                filterOptions.put(name, options);
-            }
-
-        } catch (Exception e) {
-            logger.error("Unknown error occurred during filter option extraction. URL: {}", driver.getCurrentUrl(), e);
-        }
-    }
-
-    private List<WebElement> waitForStableOptions(WebDriver driver, By optionSelector, int maxTries, long intervalMs) {
-        int sameCount = 0;
-        int prevCount = -1;
-
-        for (int i = 0; i < maxTries; i++) {
-            List<WebElement> elements = driver.findElements(optionSelector);
-            int currCount = elements.size();
-
-            if (currCount == prevCount && currCount > 0) {
-                sameCount++;
-                if (sameCount >= 2) { // 2회 연속 같으면 안정된 것으로 판단
-                    return elements;
-                }
-            } else {
-                sameCount = 0;
-            }
-
-            prevCount = currCount;
-
+            // 실제 클릭 가능한 조상(button/role=button) 우선 사용
+            WebElement clickable = label;
             try {
-                Thread.sleep(intervalMs);
-            } catch (InterruptedException e) {
-                break;
-            }
-        }
+                clickable = label.findElement(By.xpath("./ancestor-or-self::*[self::button or @role='button'][1]"));
+            } catch (NoSuchElementException ignore) { }
 
-        return new ArrayList<>();
+            // 클릭 시도 (일반 → JS 대체)
+            try {
+                try {
+                    new Actions(driver).moveToElement(clickable).pause(Duration.ofMillis(80)).click().perform();
+                } catch (ElementNotInteractableException e) {
+                    ((JavascriptExecutor) driver).executeScript("arguments[0].click();", clickable);
+                }
+            } catch (StaleElementReferenceException e) {
+                // 한 번만 재시도
+                labels = driver.findElements(By.cssSelector("span.sc-86b147bc-0.ghZIoe")).stream()
+                    .filter(WebElement::isDisplayed).toList();
+                if (i < labels.size()) {
+                    label = labels.get(i);
+                    try { ((JavascriptExecutor) driver).executeScript("arguments[0].click();", label); }
+                    catch (Exception ignore2) { /* 다음으로 진행 */ }
+                }
+            }
+
+            // 드롭다운 로드/가시성 대기
+            WebElement dropdown = wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("#dropdown-portal")));
+
+            List<WebElement> optionElements = wait.until(
+                ExpectedConditions.presenceOfAllElementsLocatedBy(
+                    By.cssSelector("#dropdown-portal span.sc-86b147bc-0.ONaOy, #dropdown-portal [role='menuitem'], #dropdown-portal li")
+                )
+            );
+
+            List<String> options = new ArrayList<>();
+            for (WebElement op : optionElements) {
+                if (op.isDisplayed()) {
+                    String val = op.getText().trim();
+                    if (!val.isEmpty()) options.add(val);
+                }
+            }
+            filterOptions.put(name, options);
+
+            // 드롭다운 닫기
+            driver.findElement(By.tagName("body")).sendKeys(Keys.ESCAPE);
+        }
     }
 
-    private List<JobPostingEntity> handleJobCards(Elements links, Map<String, List<String>> options, Long companyId) {
+    private List<JobPostingEntity> handleJobCards(Element container, Map<String, List<String>> options, Long companyId) {
 
         List<JobPostingEntity> jobPostingEntities = new ArrayList<>();
 
         Map<String, Field> textToField = buildTextToField(options);
 
+        Elements links = container.select("ul a[href]");
+
         for (Element link : links) {
             String href = link.attr("href");
-            String title = link.select("span.sc-86b147bc-0.gIOkaZ.sc-d200d649-1.dKCwbm").text();
-            Elements details = link.select("span.sc-be6466ed-3.bDOHei");
+            String title = link.select("span.sc-86b147bc-0.gIOkaZ.sc-f484a550-1.gMeHeg").text();
+            Elements details = link.select("span.sc-86b147bc-0.bugutw.sc-708ae078-1.gAEjfw");
 
             String category = "";
             String experienceLevel = "";
@@ -193,7 +186,7 @@ public class GreetingV2Parser implements JobParser {
             String location = "";
 
             for (Element detail : details) {
-                String text = detail.text();
+                String text = detail.select("span.sc-708ae078-3.hBUoLe").text();
 
                 Field f = textToField.get(text);
                 if (f != null) {
