@@ -200,7 +200,7 @@ public class GreetingV2Parser implements JobParser {
                 }
 
                 if (!category.isEmpty() && !experienceLevel.isEmpty()
-                    && !employmentType.isEmpty() && !location.isEmpty()) {
+                    && !employmentType.isEmpty() && !location.isEmpty() && f != null) {
                     break;
                 }
             }
