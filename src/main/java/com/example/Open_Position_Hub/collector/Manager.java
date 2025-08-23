@@ -5,8 +5,12 @@ import com.example.Open_Position_Hub.db.CompanyEntity;
 import com.example.Open_Position_Hub.db.CompanyRepository;
 import com.example.Open_Position_Hub.db.JobPostingEntity;
 import com.example.Open_Position_Hub.db.JobPostingRepository;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.jsoup.nodes.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,19 +64,40 @@ public class Manager {
             return;
         }
 
-        List<String> existingUrls = jobPostingRepository.findByCompanyId(scrapedJobPostings.get(0).getCompanyId()).stream()
+        Long companyId = scrapedJobPostings.get(0).getCompanyId();
+
+        List<JobPostingEntity> existing = jobPostingRepository.findByCompanyId(companyId);
+        Set<String> existingUrls = existing.stream()
             .map(JobPostingEntity::getDetailUrl)
+            .collect(Collectors.toSet());
+
+        Map<String, JobPostingEntity> scrapedByUrl = new LinkedHashMap<>();
+        for (JobPostingEntity s : scrapedJobPostings) {
+            scrapedByUrl.putIfAbsent(s.getDetailUrl(), s);
+        }
+        Set<String> scrapedUrls = scrapedByUrl.keySet();
+
+        List<JobPostingEntity> toInsert = scrapedByUrl.entrySet().stream()
+            .filter(e -> !existingUrls.contains(e.getKey()))
+            .map(Map.Entry::getValue)
             .toList();
 
-        List<JobPostingEntity> newJobPostings = scrapedJobPostings.stream()
-            .filter(job -> !existingUrls.contains(job.getDetailUrl()))
+        List<JobPostingEntity> toDelete = existing.stream()
+            .filter(e -> !scrapedUrls.contains(e.getDetailUrl()))
             .toList();
 
-        if (!newJobPostings.isEmpty()) {
-            jobPostingRepository.saveAll(newJobPostings);
-            logger.info("Saved {} new job postings.", newJobPostings.size());
+        if (!scrapedJobPostings.isEmpty()) {
+            jobPostingRepository.saveAll(toInsert);
+            logger.info("Inserted {} new job postings.", toInsert.size());
         } else {
-            logger.info("No new job postings to save. All are duplicates.");
+            logger.info("No new job postings to insert.");
+        }
+
+        if (!toDelete.isEmpty()) {
+            jobPostingRepository.deleteAllInBatch(toDelete);
+            logger.info("Removed {} deleted job postings.", toDelete.size());
+        } else {
+            logger.info("No deleted job postings.");
         }
     }
 }
