@@ -1,5 +1,6 @@
-# [openposition](https://www.openposition.site/)
+# openposition
 산업기능요원 채용 정보를 한눈에 볼 수 있는 채용 공고 수집 플랫폼
+- [사이트 접속 링크](https://www.openposition.site/)
 
 ### 1. 프로젝트 개요
 - **프로젝트명**: Open Position Hub
@@ -16,7 +17,7 @@
 
 ### 🎯 주요 기능
 
-- 기업 채용 페이지 크롤링 (40여 개 기업)
+- 기업 채용 페이지 스크래핑 (40여 개 기업)
 - 정적(Jsoup) + 동적(Selenium) 페이지 모두 대응
 - 공고 중복 방지 로직 구현
 - 매일 새벽 3시 자동 수집 (Spring Scheduler 기반)
@@ -27,10 +28,6 @@
 - EC2 (Ubuntu 22.04, t2.micro)
 - AWS RDS (MYSQL)
 - Nginx + HTTPS 설정
-- 프리티어 내에서 서버 자원 운영 최적화 (SWAP 메모리 추가)
+- GITHUB ACTIONS CI/CD
 
 ![oph drawio (1)](https://github.com/user-attachments/assets/d2a2ab5d-2fff-443f-a2e5-2959d79f31d2)
-
-
-### 참고자료
-[포트폴리오](https://curious-raver-f98.notion.site/2032515049b9805cb3dac1f4ba2ce135#2032515049b9801395d8d1163b5f01ef)
