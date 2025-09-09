@@ -4,8 +4,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.example.Open_Position_Hub.collector.JobPostingDto;
 import com.example.Open_Position_Hub.db.CompanyEntity;
-import com.example.Open_Position_Hub.db.JobPostingEntity;
 import java.util.List;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -85,7 +85,7 @@ class GreetingV1ParserTest {
         when(company.getName()).thenReturn("ExampleCo");
         when(company.getRecruitmentUrl()).thenReturn("https://greeting.example/jobs");
 
-        List<JobPostingEntity> result = parser.parse(doc, company);
+        List<JobPostingDto> result = parser.parse(doc, company);
 
         assertNotNull(result);
         assertEquals(2, result.size(), "ul a[href] 구조에서 2건이 파싱되어야 한다");
@@ -103,7 +103,7 @@ class GreetingV1ParserTest {
         when(company.getName()).thenReturn("ExampleCo");
         when(company.getRecruitmentUrl()).thenReturn("https://greeting.example/jobs");
 
-        List<JobPostingEntity> result = parser.parse(doc, company);
+        List<JobPostingDto> result = parser.parse(doc, company);
         assertTrue(result.isEmpty());
     }
 }

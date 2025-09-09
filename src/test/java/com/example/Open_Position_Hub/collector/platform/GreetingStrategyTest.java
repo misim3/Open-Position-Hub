@@ -4,10 +4,10 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.example.Open_Position_Hub.collector.JobPostingDto;
 import com.example.Open_Position_Hub.collector.detect.DefaultDetectorRegistry;
 import com.example.Open_Position_Hub.collector.parser.ParserRegistry;
 import com.example.Open_Position_Hub.db.CompanyEntity;
-import com.example.Open_Position_Hub.db.JobPostingEntity;
 import java.util.List;
 import java.util.Optional;
 import org.jsoup.nodes.Document;
@@ -52,7 +52,7 @@ class GreetingStrategyTest {
 
         when(detector.detect(strategy.platformKey(), doc)).thenReturn(Optional.empty());
 
-        List<JobPostingEntity> result = strategy.scrape(doc, company);
+        List<JobPostingDto> result = strategy.scrape(doc, company);
         assertNotNull(result);
         assertTrue(result.isEmpty());
     }

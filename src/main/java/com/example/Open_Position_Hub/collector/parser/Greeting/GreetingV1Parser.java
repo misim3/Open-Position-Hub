@@ -1,8 +1,8 @@
 package com.example.Open_Position_Hub.collector.parser.Greeting;
 
+import com.example.Open_Position_Hub.collector.JobPostingDto;
 import com.example.Open_Position_Hub.collector.parser.JobParser;
 import com.example.Open_Position_Hub.db.CompanyEntity;
-import com.example.Open_Position_Hub.db.JobPostingEntity;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -28,7 +28,7 @@ public class GreetingV1Parser implements JobParser {
     }
 
     @Override
-    public List<JobPostingEntity> parse(Document doc, CompanyEntity company) {
+    public List<JobPostingDto> parse(Document doc, CompanyEntity company) {
 
         Map<String, List<String>> options = handleSideBar(doc.select("div.sc-9b56f69e-0.imkSIw.sc-9b6acf96-0.mgFVD").select("div.sc-c7f48e72-0.biJzyB"));
         if (options.isEmpty()) {
@@ -36,11 +36,11 @@ public class GreetingV1Parser implements JobParser {
             return List.of();
         }
 
-        List<JobPostingEntity> jobPostingEntities = handleJobCards(Objects.requireNonNull(doc.selectFirst("div.sc-9b56f69e-0.enoHnQ")), options, company.getId());
-        if (jobPostingEntities.isEmpty()) {
+        List<JobPostingDto> jobPostings = handleJobCards(Objects.requireNonNull(doc.selectFirst("div.sc-9b56f69e-0.enoHnQ")), options, company.getId());
+        if (jobPostings.isEmpty()) {
             logger.error("HTML structure changed: Unable to find elements(handleJobCards) for Company: {}, URL: {}", company.getName(), company.getRecruitmentUrl());
         }
-        return jobPostingEntities;
+        return jobPostings;
     }
 
     private Map<String, List<String>> handleSideBar(Elements categories) {
@@ -62,9 +62,9 @@ public class GreetingV1Parser implements JobParser {
         return options;
     }
 
-    private List<JobPostingEntity> handleJobCards(Element container, Map<String, List<String>> options, Long companyId) {
+    private List<JobPostingDto> handleJobCards(Element container, Map<String, List<String>> options, Long companyId) {
 
-        List<JobPostingEntity> jobPostingEntities = new ArrayList<>();
+        List<JobPostingDto> jobPostings = new ArrayList<>();
 
         Map<String, Field> textToField = buildTextToField(options);
 
@@ -101,10 +101,10 @@ public class GreetingV1Parser implements JobParser {
                 }
             }
 
-            jobPostingEntities.add(new JobPostingEntity(title, category, experienceLevel, employmentType, location, href, companyId));
+            jobPostings.add(new JobPostingDto(title, category, experienceLevel, employmentType, location, href, companyId));
         }
 
-        return jobPostingEntities;
+        return jobPostings;
     }
 
     private Map<String, Field> buildTextToField(Map<String, List<String>> options) {

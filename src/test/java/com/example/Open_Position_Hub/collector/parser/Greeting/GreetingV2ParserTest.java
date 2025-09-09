@@ -6,8 +6,8 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.example.Open_Position_Hub.collector.JobPostingDto;
 import com.example.Open_Position_Hub.db.CompanyEntity;
-import com.example.Open_Position_Hub.db.JobPostingEntity;
 import java.util.List;
 import java.util.Map;
 import org.jsoup.Jsoup;
@@ -76,7 +76,7 @@ class GreetingV2ParserTest {
         when(company.getId()).thenReturn(7L);
         when(company.getName()).thenReturn("ExampleCo");
 
-        List<JobPostingEntity> result = parser.parse(doc, company);
+        List<JobPostingDto> result = parser.parse(doc, company);
 
         assertNotNull(result);
         assertEquals(1, result.size(), "ul a[href] 구조에서 1건이 파싱되어야 한다");
@@ -97,7 +97,7 @@ class GreetingV2ParserTest {
         when(company.getRecruitmentUrl()).thenReturn("https://greeting.example/jobs");
         when(company.getName()).thenReturn("ExampleCo");
 
-        List<JobPostingEntity> result = parser.parse(doc, company);
+        List<JobPostingDto> result = parser.parse(doc, company);
         assertTrue(result.isEmpty());
     }
 }

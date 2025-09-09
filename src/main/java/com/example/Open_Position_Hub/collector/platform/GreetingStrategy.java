@@ -1,9 +1,9 @@
 package com.example.Open_Position_Hub.collector.platform;
 
+import com.example.Open_Position_Hub.collector.JobPostingDto;
 import com.example.Open_Position_Hub.collector.detect.DefaultDetectorRegistry;
 import com.example.Open_Position_Hub.collector.parser.ParserRegistry;
 import com.example.Open_Position_Hub.db.CompanyEntity;
-import com.example.Open_Position_Hub.db.JobPostingEntity;
 import java.util.List;
 import java.util.Optional;
 import org.jsoup.nodes.Document;
@@ -28,7 +28,7 @@ public class GreetingStrategy implements PlatformStrategy {
     }
 
     @Override
-    public List<JobPostingEntity> scrape(Document doc, CompanyEntity company) {
+    public List<JobPostingDto> scrape(Document doc, CompanyEntity company) {
 
         Optional<String> layoutKey = defaultDetectorRegistry.detect(platformKey(), doc);
 

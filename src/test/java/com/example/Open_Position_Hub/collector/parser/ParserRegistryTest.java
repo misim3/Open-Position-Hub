@@ -2,8 +2,8 @@ package com.example.Open_Position_Hub.collector.parser;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.example.Open_Position_Hub.collector.JobPostingDto;
 import com.example.Open_Position_Hub.db.CompanyEntity;
-import com.example.Open_Position_Hub.db.JobPostingEntity;
 import java.util.List;
 import org.jsoup.nodes.Document;
 import org.junit.jupiter.api.DisplayName;
@@ -13,17 +13,17 @@ class ParserRegistryTest {
 
     static class DummyParserA implements JobParser {
         @Override public String layoutKey() { return "그리팅/V1"; }
-        @Override public List<JobPostingEntity> parse(Document doc, CompanyEntity company) { return List.of(); }
+        @Override public List<JobPostingDto> parse(Document doc, CompanyEntity company) { return List.of(); }
     }
 
     static class DummyParserB implements JobParser {
         @Override public String layoutKey() { return "그리팅/V2"; }
-        @Override public List<JobPostingEntity> parse(Document doc, CompanyEntity company) { return List.of(); }
+        @Override public List<JobPostingDto> parse(Document doc, CompanyEntity company) { return List.of(); }
     }
 
     static class DuplicateKeyParser implements JobParser {
         @Override public String layoutKey() { return "그리팅/V1"; }
-        @Override public List<JobPostingEntity> parse(Document doc, CompanyEntity company) { return List.of(); }
+        @Override public List<JobPostingDto> parse(Document doc, CompanyEntity company) { return List.of(); }
     }
 
     @Test

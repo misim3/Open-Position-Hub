@@ -5,6 +5,7 @@ import com.example.Open_Position_Hub.db.CompanyEntity;
 import com.example.Open_Position_Hub.db.CompanyRepository;
 import com.example.Open_Position_Hub.db.JobPostingEntity;
 import com.example.Open_Position_Hub.db.JobPostingRepository;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -45,7 +46,7 @@ public class Manager {
         System.out.println("Done!");
     }
 
-    private List<JobPostingEntity> processJobScraping(CompanyEntity company) {
+    private List<JobPostingDto> processJobScraping(CompanyEntity company) {
 
         logger.info("{} Processing job scraping...", company.getName());
 
@@ -58,13 +59,15 @@ public class Manager {
         return List.of();
     }
 
-    private void saveJobPostings(List<JobPostingEntity> scrapedJobPostings) {
+    private void saveJobPostings(List<JobPostingDto> scrapedJobPostings) {
 
         if (scrapedJobPostings.isEmpty()) {
             return;
         }
 
-        Long companyId = scrapedJobPostings.get(0).getCompanyId();
+        List<JobPostingDto> jobPostings = new HashSet<>(scrapedJobPostings).stream().toList();
+
+        Long companyId = jobPostings.get(0).companyId();
 
         List<JobPostingEntity> existing = jobPostingRepository.findByCompanyId(companyId);
         Set<String> existingUrls = existing.stream()
@@ -72,8 +75,8 @@ public class Manager {
             .collect(Collectors.toSet());
 
         Map<String, JobPostingEntity> scrapedByUrl = new LinkedHashMap<>();
-        for (JobPostingEntity s : scrapedJobPostings) {
-            scrapedByUrl.putIfAbsent(s.getDetailUrl(), s);
+        for (JobPostingDto s : scrapedJobPostings) {
+            scrapedByUrl.putIfAbsent(s.detailUrl(), s.toEntity());
         }
         Set<String> scrapedUrls = scrapedByUrl.keySet();
 
