@@ -5,6 +5,7 @@ import com.example.Open_Position_Hub.db.CompanyEntity;
 import com.example.Open_Position_Hub.db.CompanyRepository;
 import com.example.Open_Position_Hub.db.JobPostingEntity;
 import com.example.Open_Position_Hub.db.JobPostingRepository;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -64,7 +65,9 @@ public class Manager {
             return;
         }
 
-        Long companyId = scrapedJobPostings.get(0).companyId();
+        List<JobPostingDto> jobPostings = new HashSet<>(scrapedJobPostings).stream().toList();
+
+        Long companyId = jobPostings.get(0).companyId();
 
         List<JobPostingEntity> existing = jobPostingRepository.findByCompanyId(companyId);
         Set<String> existingUrls = existing.stream()
