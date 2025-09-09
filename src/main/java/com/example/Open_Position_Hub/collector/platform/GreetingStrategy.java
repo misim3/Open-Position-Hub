@@ -4,7 +4,6 @@ import com.example.Open_Position_Hub.collector.JobPostingDto;
 import com.example.Open_Position_Hub.collector.detect.DefaultDetectorRegistry;
 import com.example.Open_Position_Hub.collector.parser.ParserRegistry;
 import com.example.Open_Position_Hub.db.CompanyEntity;
-import com.example.Open_Position_Hub.db.JobPostingEntity;
 import java.util.List;
 import java.util.Optional;
 import org.jsoup.nodes.Document;

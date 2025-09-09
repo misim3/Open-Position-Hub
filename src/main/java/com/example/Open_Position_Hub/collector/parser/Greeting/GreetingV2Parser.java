@@ -3,7 +3,6 @@ package com.example.Open_Position_Hub.collector.parser.Greeting;
 import com.example.Open_Position_Hub.collector.JobPostingDto;
 import com.example.Open_Position_Hub.collector.parser.JobParser;
 import com.example.Open_Position_Hub.db.CompanyEntity;
-import com.example.Open_Position_Hub.db.JobPostingEntity;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;

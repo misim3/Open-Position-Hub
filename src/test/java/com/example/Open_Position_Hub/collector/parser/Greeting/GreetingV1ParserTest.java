@@ -6,7 +6,6 @@ import static org.mockito.Mockito.when;
 
 import com.example.Open_Position_Hub.collector.JobPostingDto;
 import com.example.Open_Position_Hub.db.CompanyEntity;
-import com.example.Open_Position_Hub.db.JobPostingEntity;
 import java.util.List;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
