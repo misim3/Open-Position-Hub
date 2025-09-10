@@ -1,6 +1,5 @@
 # openposition
 병역특례 채용 정보를 한눈에 볼 수 있는 채용 공고 수집 플랫폼
-- [사이트 접속 링크](https://www.openposition.site/)
 
 ### 1. 프로젝트 개요
 - **프로젝트명**: Open Position Hub
