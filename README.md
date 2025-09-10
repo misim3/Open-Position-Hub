@@ -13,7 +13,7 @@
 
 - Back-end: Java, Spring Boot, MySQL
 - Scraping: Jsoup, Selenium
-- Infra: AWS EC2, RDS, Nginx, Ubuntu
+- Infra: AWS EC2, RDS, Nginx, Ubuntu, Gitub Actions
 
 ### 🎯 주요 기능
 
