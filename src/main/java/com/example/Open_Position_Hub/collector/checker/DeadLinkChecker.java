@@ -35,8 +35,7 @@ public class DeadLinkChecker {
 
     private boolean isAccessible(String url) throws IOException {
 
-        Response response = null;
-        response = Jsoup.connect(url).response();
+        Response response = Jsoup.connect(url).response();
         return response.statusCode() == 200;
     }
 }
