@@ -62,7 +62,8 @@ public class Manager {
         Optional<Document> doc = scraper.fetchHtml(company.getRecruitmentUrl());
 
         if (doc.isPresent()) {
-            return platformRegistry.getStrategy(company.getRecruitmentPlatform()).scrape(doc.get(), company);
+            return platformRegistry.getStrategy(company.getRecruitmentPlatform())
+                .scrape(doc.get(), company);
         }
 
         return List.of();
@@ -112,11 +113,14 @@ public class Manager {
             logger.info("No deleted job postings.");
         }
     }
+
     @Scheduled(cron = "0 0 */3 * * *")
     public void check() {
 
         List<JobPostingEntity> jobPostingEntities = jobPostingRepository.findAll();
-        if (jobPostingEntities.isEmpty()) return;
+        if (jobPostingEntities.isEmpty()) {
+            return;
+        }
 
         Map<String, Long> checkUrlToEntityId = new HashMap<>(jobPostingEntities.size());
         List<JobPostingDto> jobPostingsForCheck = new ArrayList<>(jobPostingEntities.size());
@@ -144,10 +148,14 @@ public class Manager {
             ));
         }
 
-        if (jobPostingsForCheck.isEmpty()) return;
+        if (jobPostingsForCheck.isEmpty()) {
+            return;
+        }
 
         List<JobPostingDto> deadJobPostings = deadLinkChecker.checkDeadLinks(jobPostingsForCheck);
-        if (deadJobPostings.isEmpty()) return;
+        if (deadJobPostings.isEmpty()) {
+            return;
+        }
 
         List<Long> idsToDelete = deadJobPostings.stream()
             .map(d -> checkUrlToEntityId.get(d.detailUrl()))
