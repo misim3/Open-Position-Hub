@@ -1,14 +1,20 @@
 package com.example.Open_Position_Hub.collector;
 
+import com.example.Open_Position_Hub.collector.checker.DeadLinkChecker;
 import com.example.Open_Position_Hub.collector.platform.PlatformRegistry;
 import com.example.Open_Position_Hub.db.CompanyEntity;
 import com.example.Open_Position_Hub.db.CompanyRepository;
 import com.example.Open_Position_Hub.db.JobPostingEntity;
 import com.example.Open_Position_Hub.db.JobPostingRepository;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -26,19 +32,22 @@ public class Manager {
     private final JobPostingRepository jobPostingRepository;
     private final CompanyRepository companyRepository;
     private final PlatformRegistry platformRegistry;
+    private final DeadLinkChecker deadLinkChecker;
 
     public Manager(Scraper scraper,
         JobPostingRepository jobPostingRepository,
         CompanyRepository companyRepository,
-        PlatformRegistry platformRegistry) {
+        PlatformRegistry platformRegistry,
+        DeadLinkChecker deadLinkChecker) {
         this.scraper = scraper;
         this.jobPostingRepository = jobPostingRepository;
         this.companyRepository = companyRepository;
         this.platformRegistry = platformRegistry;
+        this.deadLinkChecker = deadLinkChecker;
     }
 
     @Scheduled(cron = "0 0 3 * * *")
-    public void process() {
+    public void scrape() {
         System.out.println("Processing...");
 //        List<CompanyEntity> companies = companyRepository.findAll();
         List<CompanyEntity> companies = companyRepository.findAllByRecruitmentPlatform("그리팅");
@@ -101,6 +110,63 @@ public class Manager {
             logger.info("Removed {} deleted job postings.", toDelete.size());
         } else {
             logger.info("No deleted job postings.");
+        }
+    }
+    @Scheduled(cron = "0 0 */3 * * *")
+    public void check() {
+
+        List<JobPostingEntity> jobPostingEntities = jobPostingRepository.findAll();
+        if (jobPostingEntities.isEmpty()) return;
+
+        Map<String, Long> checkUrlToEntityId = new HashMap<>(jobPostingEntities.size());
+        List<JobPostingDto> jobPostingsForCheck = new ArrayList<>(jobPostingEntities.size());
+
+        for (JobPostingEntity j : jobPostingEntities) {
+            Optional<CompanyEntity> optCompany = companyRepository.findById(j.getCompanyId());
+            if (optCompany.isEmpty()) {
+                logger.warn("[Manager - check] Company not found: {}", j.getCompanyId());
+                continue;
+            }
+
+            CompanyEntity company = optCompany.get();
+            String checkUrl = buildRedirectUrl(company.getRecruitmentUrl(), j.getDetailUrl());
+
+            checkUrlToEntityId.put(checkUrl, j.getId());
+
+            jobPostingsForCheck.add(new JobPostingDto(
+                j.getTitle(),
+                j.getCategory(),
+                j.getExperienceLevel(),
+                j.getEmploymentType(),
+                j.getLocation(),
+                checkUrl,
+                company.getId()
+            ));
+        }
+
+        if (jobPostingsForCheck.isEmpty()) return;
+
+        List<JobPostingDto> deadJobPostings = deadLinkChecker.checkDeadLinks(jobPostingsForCheck);
+        if (deadJobPostings.isEmpty()) return;
+
+        List<Long> idsToDelete = deadJobPostings.stream()
+            .map(d -> checkUrlToEntityId.get(d.detailUrl()))
+            .filter(Objects::nonNull)
+            .toList();
+
+        if (!idsToDelete.isEmpty()) {
+            jobPostingRepository.deleteAllByIdInBatch(idsToDelete);
+            logger.info("[Manager - check] Deleted {} dead postings", idsToDelete.size());
+        }
+    }
+
+    private String buildRedirectUrl(String recruitmentUrl, String detailUrl) {
+        try {
+            URI baseUri = new URI(recruitmentUrl);
+            String domain = baseUri.getScheme() + "://" + baseUri.getHost();
+            return domain + detailUrl;
+        } catch (URISyntaxException e) {
+            throw new RuntimeException("Invalid recruitment URL: " + recruitmentUrl);
         }
     }
 }
