@@ -57,7 +57,7 @@ class ManagerTest {
 
         companyRepository.saveAll(List.of(doeat(), gravityLabs(), doodlin(), gear2()));
 
-        manager.process();
+        manager.scrape();
 
         jobPostingRepository.findAll().forEach(System.out::println);
 
