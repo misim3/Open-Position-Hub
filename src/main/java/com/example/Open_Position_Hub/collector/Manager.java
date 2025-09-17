@@ -53,7 +53,7 @@ public class Manager {
 
     @Scheduled(cron = "0 0 3 * * *", zone = "Asia/Seoul")
     public void scrape() {
-        System.out.println("Processing...");
+        System.out.println("Start scraping...");
 //        List<CompanyEntity> companies = companyRepository.findAll();
         List<CompanyEntity> companies = companyRepository.findAllByRecruitmentPlatform("그리팅");
         companies.forEach(company -> saveJobPostings(processJobScraping(company)));
@@ -121,7 +121,7 @@ public class Manager {
 
     @Scheduled(cron = "0 */10 6-23 * * *", zone = "Asia/Seoul")
     public void check() {
-
+        System.out.println("Start checking...");
         int bucket = counterForCheck.getAndUpdate(c -> (c + 1) % 36);
 
         List<JobPostingEntity> jobPostingEntities = jobPostingRepository.findShard(36, bucket);
@@ -172,14 +172,18 @@ public class Manager {
             deleteChunk(idsToDelete, 500);
             logger.info("[Manager - check] Deleted {} dead postings", idsToDelete.size());
         }
+
+        System.out.println("Done!");
     }
 
     private String buildRedirectUrl(String recruitmentUrl, String detailUrl) {
         try {
             URI base = new URI(recruitmentUrl);
+            if (!base.getPath().endsWith("/")) {
+                base = base.resolve(base.getPath() + "/");
+            }
             URI detail = new URI(detailUrl);
-            URI total = base.resolve(detail);
-            return total.toString();
+            return base.resolve(detail).toString();
         } catch (URISyntaxException e) {
             throw new RuntimeException("Invalid BASE URL: " + recruitmentUrl + ", DETAIL: " + detailUrl, e.fillInStackTrace());
         }
