@@ -7,7 +7,6 @@ import org.springframework.data.web.config.EnableSpringDataWebSupport.PageSerial
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
-@EnableScheduling
 @EnableSpringDataWebSupport(pageSerializationMode = PageSerializationMode.VIA_DTO)
 public class OpenPositionHubApplication {
 

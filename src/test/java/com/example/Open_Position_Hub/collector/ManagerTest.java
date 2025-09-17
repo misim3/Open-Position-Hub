@@ -1,13 +1,21 @@
 package com.example.Open_Position_Hub.collector;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import com.example.Open_Position_Hub.db.CompanyEntity;
 import com.example.Open_Position_Hub.db.CompanyRepository;
 import com.example.Open_Position_Hub.db.JobPostingRepository;
+import java.util.Collection;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ApplicationContext;
 import org.springframework.core.env.Environment;
+import org.springframework.scheduling.config.ScheduledTask;
+import org.springframework.scheduling.config.ScheduledTaskHolder;
 import org.springframework.test.context.ActiveProfiles;
 
 @ActiveProfiles("test")
@@ -51,6 +59,28 @@ class ManagerTest {
     void printDataSourceUrl() {
         System.out.println("🔍 spring.datasource.url = " + env.getProperty("spring.datasource.url"));
     }
+    @Autowired
+    ApplicationContext context;
+
+    @Test
+    void scheduling_should_be_disabled_in_test_profile() {
+        // 1) 스케줄러 등록 현황 수집
+        Collection<ScheduledTaskHolder> holders = context.getBeansOfType(ScheduledTaskHolder.class).values();
+        Set<ScheduledTask> tasks = holders.stream()
+            .flatMap(h -> h.getScheduledTasks().stream())
+            .collect(Collectors.toSet());
+
+        // 2) 조건: (a) 아예 홀더가 없거나, (b) 홀더는 있어도 등록된 작업이 0
+        boolean disabled = holders.isEmpty() || tasks.isEmpty();
+
+        // 3) 실패 시 어떤 작업이 잡혀 있었는지 보여주기 (toString()에 크론/딜레이 정보가 포함됨)
+        String debug = tasks.stream()
+            .map(Object::toString)
+            .collect(Collectors.joining("\n"));
+
+        assertTrue(disabled, () ->
+            "스케줄링이 활성화되어 있습니다. 등록된 작업:\n" + (debug.isBlank() ? "(없음)" : debug));
+    }
 
     @Test
     void test() {
@@ -58,6 +88,8 @@ class ManagerTest {
         companyRepository.saveAll(List.of(doeat(), gravityLabs(), doodlin(), gear2()));
 
         manager.scrape();
+
+        manager.check();
 
         jobPostingRepository.findAll().forEach(System.out::println);
 
