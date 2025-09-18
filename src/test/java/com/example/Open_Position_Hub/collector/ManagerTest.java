@@ -50,6 +50,10 @@ class ManagerTest {
         return new CompanyEntity("gear2", "그리팅", "https://gear2.career.greetinghr.com/ko/career1");
     }
 
+    private CompanyEntity weavrcare() {
+        return new CompanyEntity("weavrcare", "그리팅", "https://weavrcare.career.greetinghr.com/ko/home");
+    }
+
     @Test
     void profileCheck() {
         System.out.println("▶ Active profile = " + System.getProperty("spring.profiles.active"));
@@ -85,7 +89,7 @@ class ManagerTest {
     @Test
     void test() {
 
-        companyRepository.saveAll(List.of(doeat(), gravityLabs(), doodlin(), gear2()));
+        companyRepository.saveAll(List.of(doeat(), doodlin(), gravityLabs(), gear2(), weavrcare()));
 
         manager.scrape();
 
