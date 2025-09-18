@@ -1,16 +1,24 @@
 package com.example.Open_Position_Hub.collector;
 
+import com.example.Open_Position_Hub.collector.checker.DeadLinkChecker;
 import com.example.Open_Position_Hub.collector.platform.PlatformRegistry;
+import com.example.Open_Position_Hub.db.BaseEntity;
 import com.example.Open_Position_Hub.db.CompanyEntity;
 import com.example.Open_Position_Hub.db.CompanyRepository;
 import com.example.Open_Position_Hub.db.JobPostingEntity;
 import com.example.Open_Position_Hub.db.JobPostingRepository;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import org.jsoup.nodes.Document;
 import org.slf4j.Logger;
@@ -26,20 +34,26 @@ public class Manager {
     private final JobPostingRepository jobPostingRepository;
     private final CompanyRepository companyRepository;
     private final PlatformRegistry platformRegistry;
+    private final DeadLinkChecker deadLinkChecker;
+
+    private final AtomicInteger counterForCheck;
 
     public Manager(Scraper scraper,
         JobPostingRepository jobPostingRepository,
         CompanyRepository companyRepository,
-        PlatformRegistry platformRegistry) {
+        PlatformRegistry platformRegistry,
+        DeadLinkChecker deadLinkChecker) {
         this.scraper = scraper;
         this.jobPostingRepository = jobPostingRepository;
         this.companyRepository = companyRepository;
         this.platformRegistry = platformRegistry;
+        this.deadLinkChecker = deadLinkChecker;
+        this.counterForCheck = new AtomicInteger(0);
     }
 
-    @Scheduled(cron = "0 0 3 * * *")
-    public void process() {
-        System.out.println("Processing...");
+    @Scheduled(cron = "0 0 3 * * *", zone = "Asia/Seoul")
+    public void scrape() {
+        System.out.println("Start scraping...");
 //        List<CompanyEntity> companies = companyRepository.findAll();
         List<CompanyEntity> companies = companyRepository.findAllByRecruitmentPlatform("그리팅");
         companies.forEach(company -> saveJobPostings(processJobScraping(company)));
@@ -53,7 +67,8 @@ public class Manager {
         Optional<Document> doc = scraper.fetchHtml(company.getRecruitmentUrl());
 
         if (doc.isPresent()) {
-            return platformRegistry.getStrategy(company.getRecruitmentPlatform()).scrape(doc.get(), company);
+            return platformRegistry.getStrategy(company.getRecruitmentPlatform())
+                .scrape(doc.get(), company);
         }
 
         return List.of();
@@ -101,6 +116,129 @@ public class Manager {
             logger.info("Removed {} deleted job postings.", toDelete.size());
         } else {
             logger.info("No deleted job postings.");
+        }
+    }
+
+    /*
+    b=0, 18:00
+    b=1, 18:10
+    b=2, 18:20
+    b=3, 18:30
+    b=4, 18:40
+    b=5, 18:50
+    b=6, 19:00
+    b=7, 19:10
+    b=8, 19:20
+    b=9, 19:30
+    b=10, 19:40
+    b=11, 19:50
+    b=12, 20:00
+    b=13, 20:10
+    b=14, 20:20
+    b=15, 20:30
+    b=16, 20:40
+    b=17, 20:50
+    b=18, 21:00
+    b=19, 21:10
+    b=20, 21:20
+    b=21, 21:30
+    b=22, 21:40
+    b=23, 21:50
+    b=24, 22:00
+    b=25, 22:10
+    b=26, 22:20
+    b=27, 22:30
+    b=28, 22:40
+    b=29, 22:50
+    b=30, 23:00
+    b=31, 23:10
+    b=32, 23:20
+    b=33, 23:30
+    b=34, 23:40
+    b=35, 23:50
+
+    b=0, 6:00
+     */
+
+    @Scheduled(cron = "0 */10 6-23 * * *", zone = "Asia/Seoul")
+    public void check() {
+        System.out.println("Start checking...");
+        int bucket = counterForCheck.getAndUpdate(c -> (c + 1) % 36);
+
+        List<JobPostingEntity> jobPostingEntities = jobPostingRepository.findShard(36, bucket);
+
+        if (jobPostingEntities.isEmpty()) {
+            return;
+        }
+
+        Map<String, Long> checkUrlToEntityId = new HashMap<>(jobPostingEntities.size());
+        List<JobPostingDto> jobPostingsForCheck = new ArrayList<>(jobPostingEntities.size());
+        Set<Long> companyIds = jobPostingEntities.stream().map(JobPostingEntity::getCompanyId).collect(Collectors.toSet());
+        Map<Long, CompanyEntity> companyMap = companyRepository.findAllById(companyIds).stream()
+            .collect(Collectors.toMap(BaseEntity::getId, company -> company));
+
+        for (JobPostingEntity j : jobPostingEntities) {
+            CompanyEntity company = companyMap.get(j.getCompanyId());
+
+            if (company == null) {
+                logger.warn("[Manager - check] Company id {} not found.", j.getCompanyId());
+                continue;
+            }
+
+            String checkUrl = buildRedirectUrl(company.getRecruitmentUrl(), j.getDetailUrl());
+
+            checkUrlToEntityId.put(checkUrl, j.getId());
+
+            jobPostingsForCheck.add(new JobPostingDto(
+                j.getTitle(),
+                j.getCategory(),
+                j.getExperienceLevel(),
+                j.getEmploymentType(),
+                j.getLocation(),
+                checkUrl,
+                company.getId()
+            ));
+        }
+
+        if (jobPostingsForCheck.isEmpty()) {
+            return;
+        }
+
+        List<JobPostingDto> deadJobPostings = deadLinkChecker.checkDeadLinks(jobPostingsForCheck);
+        if (deadJobPostings.isEmpty()) {
+            return;
+        }
+
+        List<Long> idsToDelete = deadJobPostings.stream()
+            .map(d -> checkUrlToEntityId.get(d.detailUrl()))
+            .filter(Objects::nonNull)
+            .toList();
+
+        if (!idsToDelete.isEmpty()) {
+            deleteChunk(idsToDelete, 500);
+            logger.info("[Manager - check] Deleted {} dead postings", idsToDelete.size());
+        }
+
+        System.out.println("Done!");
+    }
+
+    private String buildRedirectUrl(String recruitmentUrl, String detailUrl) {
+        try {
+            URI base = new URI(recruitmentUrl);
+            if (!base.getPath().endsWith("/")) {
+                base = base.resolve(base.getPath() + "/");
+            }
+            URI detail = new URI(detailUrl);
+            return base.resolve(detail).toString();
+        } catch (URISyntaxException e) {
+            throw new RuntimeException("Invalid BASE URL: " + recruitmentUrl + ", DETAIL: " + detailUrl, e.fillInStackTrace());
+        }
+    }
+
+    private void deleteChunk(List<Long> ids, int chunkSize) {
+        for (int i = 0; i < ids.size(); i += chunkSize) {
+            int end = Math.min(i + chunkSize, ids.size());
+            jobPostingRepository.deleteAllByIdInBatch(ids.subList(i, end));
         }
     }
 }
