@@ -130,8 +130,9 @@ public class GreetingV2Parser implements JobParser {
                 ((JavascriptExecutor) driver).executeScript("arguments[0].click();", clickable);
             }
 
-            quickWait.until(ExpectedConditions.invisibilityOf(element));
-        } catch (NoSuchElementException | StaleElementReferenceException e) {
+            wait.until(ExpectedConditions.invisibilityOf(element));
+
+        } catch (NoSuchElementException | StaleElementReferenceException | TimeoutException e) {
             logger.error("[GreetingV2Parser - closePopup] Fail to close Popup: ", e.fillInStackTrace());
         }
     }
