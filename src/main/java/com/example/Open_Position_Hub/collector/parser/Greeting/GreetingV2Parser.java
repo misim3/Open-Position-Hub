@@ -86,7 +86,10 @@ public class GreetingV2Parser implements JobParser {
             // 1. 채용 공고 페이지 접속
             driver.get(url);
 
-            // 2. 필터바의 선택지 가져오기 (업데이트된 방식)
+            // 2. 팝업창 닫기
+            closePopupIfPresent(driver, wait);
+
+            // 3. 필터바의 선택지 가져오기
             getFilterOptions(driver, wait, filterOptions);
 
         } catch (TimeoutException e) {
@@ -102,6 +105,36 @@ public class GreetingV2Parser implements JobParser {
             driver.quit();
         }
         return filterOptions;
+    }
+
+    private void closePopupIfPresent(WebDriver driver, WebDriverWait wait) {
+
+        WebDriverWait quickWait  = new WebDriverWait(driver, Duration.ofMillis(500));
+        try {
+            quickWait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("div.modal")));
+        } catch (TimeoutException e) {
+            return ;
+        }
+
+        try {
+
+            WebElement element = driver.findElement(By.cssSelector("div.modal"));
+
+            WebElement clickable = element.findElement(By.cssSelector("span.pop_bt"));
+
+            wait.until(ExpectedConditions.elementToBeClickable(clickable));
+
+            try {
+                new Actions(driver).moveToElement(clickable).click().perform();
+            } catch (WebDriverException ex) {
+                ((JavascriptExecutor) driver).executeScript("arguments[0].click();", clickable);
+            }
+
+            wait.until(ExpectedConditions.invisibilityOf(element));
+
+        } catch (NoSuchElementException | StaleElementReferenceException | TimeoutException e) {
+            logger.error("[GreetingV2Parser - closePopup] Fail to close Popup: ", e.fillInStackTrace());
+        }
     }
 
     // 특정 필터(구분, 직군, 경력사항 등)의 선택지를 가져오는 메서드
