@@ -2,13 +2,20 @@ package com.example.Open_Position_Hub.uploader;
 
 import com.example.Open_Position_Hub.db.CompanyEntity;
 import com.example.Open_Position_Hub.db.CompanyRepository;
-import org.apache.poi.ss.usermodel.*;
+import java.io.InputStream;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.Hyperlink;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.io.InputStream;
-import java.util.*;
 
 @Service
 public class ExcelImportService {
@@ -34,19 +41,24 @@ public class ExcelImportService {
 
             for (int i = 1; i <= sheet.getLastRowNum(); i++) {
                 Row row = sheet.getRow(i);
-                if (row == null) continue;
+                if (row == null) {
+                    continue;
+                }
 
                 // 업체명 정제
                 Cell nameCell = row.getCell(1);
-                if (nameCell == null || nameCell.getCellType() != CellType.STRING) continue;
+                if (nameCell == null || nameCell.getCellType() != CellType.STRING) {
+                    continue;
+                }
                 String rawName = nameCell.getStringCellValue();
                 String cleanName = extractCleanName(rawName);
 
                 // 플랫폼
                 Cell platformCell = row.getCell(3);
-                String platform = (platformCell != null && platformCell.getCellType() == CellType.STRING)
-                    ? platformCell.getStringCellValue()
-                    : null;
+                String platform =
+                    (platformCell != null && platformCell.getCellType() == CellType.STRING)
+                        ? platformCell.getStringCellValue()
+                        : null;
 
                 // URL 추출 (하이퍼링크 우선)
                 Cell urlCell = row.getCell(2);
@@ -84,14 +96,16 @@ public class ExcelImportService {
         }
     }
 
-    private String extractCleanName(String rawName) {
-        if (rawName == null) return "";
+    private static String extractCleanName(String rawName) {
 
-        // 괄호 제거
+        if (rawName == null) {
+            return "";
+        }
+
         String cleaned = rawName.replaceAll("\\(.*?\\)", "");
 
-        // 앞/뒤에 (주), (유), 주식회사 제거
-        cleaned = cleaned.replaceAll("(?i)(^\\s*(주식회사|[(]?(주|유)[)]?)\\s*|\\s*(주식회사|[(]?(주|유)[)]?)\\s*$)", "");
+        cleaned = cleaned.replaceAll(
+            "(?i)(^\\s*(?:주식회사|유한회사)\\s*|\\s*(?:주식회사|유한회사)\\s*$)", "");
 
         return cleaned.trim();
     }
