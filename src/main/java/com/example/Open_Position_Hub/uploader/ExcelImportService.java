@@ -96,16 +96,17 @@ public class ExcelImportService {
         }
     }
 
-    private String extractCleanName(String rawName) {
+    private static String extractCleanName(String rawName) {
 
         if (rawName == null) {
             return "";
         }
 
-        // 앞/뒤에 (주), (유), 주식회사 제거
-        rawName = rawName.replaceAll(
-            "(?i)(^\\s*(?:주식회사|유한회사|\\((?:주|유)\\))\\s*|\\s*(?:주식회사|유한회사|\\((?:주|유)\\))\\s*$)", "");
+        String cleaned = rawName.replaceAll("\\(.*?\\)", "");
 
-        return rawName.trim();
+        cleaned = cleaned.replaceAll(
+            "(?i)(^\\s*(?:주식회사|유한회사)\\s*|\\s*(?:주식회사|유한회사)\\s*$)", "");
+
+        return cleaned.trim();
     }
 }
