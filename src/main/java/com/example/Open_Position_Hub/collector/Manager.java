@@ -8,11 +8,8 @@ import com.example.Open_Position_Hub.db.CompanyRepository;
 import com.example.Open_Position_Hub.db.JobPostingEntity;
 import com.example.Open_Position_Hub.db.JobPostingRepository;
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -23,7 +20,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
-import org.jsoup.HttpStatusException;
 import org.jsoup.nodes.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -80,7 +76,7 @@ public class Manager {
             Document doc = fetcher.fetchHtml(url);
 
             return platformRegistry.getStrategy(company.getRecruitmentPlatform())
-                    .scrape(doc, company);
+                .scrape(doc, company);
 
         } catch (IOException e) {
             logger.error("[Manager - scrape] company: {}", company.getName(), e.fillInStackTrace());
@@ -143,7 +139,8 @@ public class Manager {
 
         Map<String, Long> checkUrlToEntityId = new HashMap<>(jobPostingEntities.size());
         List<JobPostingDto> jobPostingsForCheck = new ArrayList<>(jobPostingEntities.size());
-        Set<Long> companyIds = jobPostingEntities.stream().map(JobPostingEntity::getCompanyId).collect(Collectors.toSet());
+        Set<Long> companyIds = jobPostingEntities.stream().map(JobPostingEntity::getCompanyId)
+            .collect(Collectors.toSet());
         Map<Long, CompanyEntity> companyMap = companyRepository.findAllById(companyIds).stream()
             .collect(Collectors.toMap(BaseEntity::getId, company -> company));
 
@@ -201,7 +198,9 @@ public class Manager {
             URI detail = new URI(detailUrl);
             return base.resolve(detail).toString();
         } catch (URISyntaxException e) {
-            throw new RuntimeException("Invalid BASE URL: " + recruitmentUrl + ", DETAIL: " + detailUrl, e.fillInStackTrace());
+            throw new RuntimeException(
+                "Invalid BASE URL: " + recruitmentUrl + ", DETAIL: " + detailUrl,
+                e.fillInStackTrace());
         }
     }
 
