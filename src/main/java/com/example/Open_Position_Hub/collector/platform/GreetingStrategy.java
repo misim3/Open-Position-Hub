@@ -5,7 +5,6 @@ import com.example.Open_Position_Hub.collector.detect.DefaultDetectorRegistry;
 import com.example.Open_Position_Hub.collector.parser.ParserRegistry;
 import com.example.Open_Position_Hub.db.CompanyEntity;
 import java.util.List;
-import java.util.Optional;
 import org.jsoup.nodes.Document;
 import org.springframework.stereotype.Component;
 
@@ -30,13 +29,13 @@ public class GreetingStrategy implements PlatformStrategy {
     @Override
     public List<JobPostingDto> scrape(Document doc, CompanyEntity company) {
 
-        Optional<String> layoutKey = defaultDetectorRegistry.detect(platformKey(), doc);
+        String layoutKey = defaultDetectorRegistry.detect(platformKey(), doc);
 
-        if (layoutKey.isPresent()) {
-            return parserRegistry.get(layoutKey.get()).parse(doc, company);
+        if (layoutKey == null) {
+            return null;
         }
 
-        return List.of();
+        return parserRegistry.get(layoutKey).parse(doc, company);
     }
 
     @Override

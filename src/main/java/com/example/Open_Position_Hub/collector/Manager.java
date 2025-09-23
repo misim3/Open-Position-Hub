@@ -2,6 +2,7 @@ package com.example.Open_Position_Hub.collector;
 
 import com.example.Open_Position_Hub.collector.checker.DeadLinkChecker;
 import com.example.Open_Position_Hub.collector.platform.PlatformRegistry;
+import com.example.Open_Position_Hub.collector.platform.PlatformStrategy;
 import com.example.Open_Position_Hub.db.BaseEntity;
 import com.example.Open_Position_Hub.db.CompanyEntity;
 import com.example.Open_Position_Hub.db.CompanyRepository;
@@ -75,11 +76,23 @@ public class Manager {
 
             Document doc = fetcher.fetchHtml(url);
 
-            return platformRegistry.getStrategy(company.getRecruitmentPlatform())
-                .scrape(doc, company);
+            PlatformStrategy platformStrategy = platformRegistry.getStrategy(
+                company.getRecruitmentPlatform());
 
+            List<JobPostingDto> jobPostings = platformStrategy.scrape(doc, company);
+
+            if (jobPostings == null) {
+                logger.error(
+                    "[Manager -> scrape -> processingJobScraping -> scrape] Not Found Detector company: {}, platform: {}",
+                    company.getName(), platformStrategy.platformKey());
+            }
+
+        } catch (IllegalArgumentException e) {
+            logger.error("[Manager -> scrape -> processingJobScraping -> getStrategy] company: {}",
+                company.getName(), e.fillInStackTrace());
         } catch (IOException e) {
-            logger.error("[Manager - scrape] company: {}", company.getName(), e.fillInStackTrace());
+            logger.error("[Manager -> scrape -> processingJobScraping -> fetchHtml] company: {}",
+                company.getName(), e.fillInStackTrace());
         }
 
         return null;

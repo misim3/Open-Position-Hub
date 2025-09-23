@@ -1,12 +1,14 @@
 package com.example.Open_Position_Hub.collector.detect;
 
-import java.util.Optional;
+import java.util.NoSuchElementException;
 import org.jsoup.nodes.Document;
 
 public interface LayoutDetector {
 
     String platformKey();
+
     int order();
-    Optional<String> detect(Document doc);
+
+    String detect(Document doc) throws NoSuchElementException;
 
 }

@@ -4,7 +4,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 import org.jsoup.nodes.Document;
 import org.springframework.stereotype.Component;
@@ -26,18 +26,15 @@ public class DefaultDetectorRegistry implements DetectorRegistry {
     }
 
     @Override
-    public Optional<String> detect(String platformKey, Document doc) {
+    public String detect(String platformKey, Document doc) throws NoSuchElementException {
         List<LayoutDetector> candidates = byPlatform.getOrDefault(platformKey, List.of());
         for (LayoutDetector d : candidates) {
             try {
-                Optional<String> hit = d.detect(doc);
-                if (hit.isPresent()) {
-                    return hit;
-                }
-            } catch (Exception e) {
+                return d.detect(doc);
+            } catch (NoSuchElementException e) {
                 //
             }
         }
-        return Optional.empty();
+        return null;
     }
 }

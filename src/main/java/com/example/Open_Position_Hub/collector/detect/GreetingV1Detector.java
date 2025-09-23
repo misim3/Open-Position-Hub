@@ -1,6 +1,6 @@
 package com.example.Open_Position_Hub.collector.detect;
 
-import java.util.Optional;
+import java.util.NoSuchElementException;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.springframework.stereotype.Component;
@@ -21,11 +21,12 @@ public class GreetingV1Detector implements LayoutDetector {
     }
 
     @Override
-    public Optional<String> detect(Document doc) {
+    public String detect(Document doc) throws NoSuchElementException {
         Element listViewB = doc.selectFirst("div[listviewtype='b']");
         if (listViewB != null) {
-            return Optional.of(platformKey() + "/V1");
+            return platformKey() + "/V1";
+        } else {
+            throw new NoSuchElementException("No such element in GreetingV1Detector");
         }
-        return Optional.empty();
     }
 }
