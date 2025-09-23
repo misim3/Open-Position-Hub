@@ -12,11 +12,11 @@ public class PlatformRegistry {
         this.strategies = strategies;
     }
 
-    public PlatformStrategy getStrategy(String platform) {
+    public PlatformStrategy getStrategy(String platform) throws IllegalArgumentException {
         return strategies.stream()
             .filter(s -> s.supports(platform))
             .findFirst()
-            .orElseThrow(() -> new IllegalArgumentException("No strategy found for platform " + platform));
+            .orElseThrow(() -> new IllegalArgumentException("Not found strategy for platform " + platform));
     }
 
     public List<PlatformStrategy> getStrategies() {

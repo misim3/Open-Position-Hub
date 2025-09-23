@@ -88,8 +88,8 @@ public class Manager {
             }
 
         } catch (IllegalArgumentException e) {
-            logger.error("[Manager -> scrape -> processingJobScraping -> getStrategy] company: {}",
-                company.getName(), e.fillInStackTrace());
+            logger.error("[Manager -> scrape -> processingJobScraping -> getStrategy] company: {}, {}",
+                company.getName(), e.getMessage());
         } catch (IOException e) {
             logger.error("[Manager -> scrape -> processingJobScraping -> fetchHtml] company: {}",
                 company.getName(), e.fillInStackTrace());
