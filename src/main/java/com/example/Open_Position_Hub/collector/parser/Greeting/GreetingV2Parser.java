@@ -49,14 +49,21 @@ public class GreetingV2Parser implements JobParser {
 
         Map<String, List<String>> options = handleFilterBar(company.getRecruitmentUrl());
         if (options.isEmpty()) {
-            logger.error("HTML structure changed: Unable to find elements(handleFilterBar) for Company: {}, URL: {}", company.getName(), company.getRecruitmentUrl());
-            return List.of();
+            logger.error("HTML structure Error: Unable to find elements in GreetingV2Parser.handleSideBar for Company: {}, URL: {}", company.getName(), company.getRecruitmentUrl());
+            return null;
         }
 
-        List<JobPostingDto> jobPostings = handleJobCards(
-            Objects.requireNonNull(doc.selectFirst("div.sc-9b56f69e-0.enoHnQ")), options, company.getId());
+
+        Element container = doc.selectFirst("div.sc-9b56f69e-0.enoHnQ");
+        if (container == null) {
+            logger.error("Element not found in GreetingV2Parser.parse.container for Company: {}", company.getName());
+            return null;
+        }
+
+        List<JobPostingDto> jobPostings = handleJobCards(container, options, company.getId());
         if (jobPostings.isEmpty()) {
-            logger.error("HTML structure changed: Unable to find elements(handleJobCards) for Company: {}, URL: {}", company.getName(), company.getRecruitmentUrl());
+            logger.error("HTML structure Error: Unable to find elements in GreetingV2Parser.handleJobCards for Company: {}, URL: {}", company.getName(), company.getRecruitmentUrl());
+            return null;
         }
         return jobPostings;
     }
@@ -93,13 +100,13 @@ public class GreetingV2Parser implements JobParser {
             getFilterOptions(driver, wait, filterOptions);
 
         } catch (TimeoutException e) {
-            logger.warn("TimeoutException: Page loading timeout exceeded. URL: {}", url, e);
+            logger.warn("TimeoutException: Page loading timeout exceeded. URL: {}, {}", url, e.getMessage());
 
         } catch (WebDriverException e) {
-            logger.error("WebDriverException: Failed to execute WebDriver - URL: {}", url, e);
+            logger.error("WebDriverException: Failed to execute WebDriver - URL: {}, {}", url, e.getMessage());
 
         } catch (Exception e) {
-            logger.error("Unexpected exception occurred - URL: {}", url, e);
+            logger.error("Unexpected exception occurred - URL: {}, {}", url, e.getMessage());
 
         } finally {
             driver.quit();
@@ -133,7 +140,7 @@ public class GreetingV2Parser implements JobParser {
             wait.until(ExpectedConditions.invisibilityOf(element));
 
         } catch (NoSuchElementException | StaleElementReferenceException | TimeoutException e) {
-            logger.error("[GreetingV2Parser - closePopup] Fail to close Popup: ", e.fillInStackTrace());
+            logger.error("Fail to close Popup in GreetingV2Parser.closePopupIfPresent {}", e.getMessage());
         }
     }
 

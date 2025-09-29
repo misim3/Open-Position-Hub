@@ -11,6 +11,7 @@ import java.util.Objects;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.openqa.selenium.NoSuchElementException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -32,13 +33,20 @@ public class GreetingV1Parser implements JobParser {
 
         Map<String, List<String>> options = handleSideBar(doc.select("div.sc-9b56f69e-0.imkSIw.sc-9b6acf96-0.mgFVD").select("div.sc-c7f48e72-0.biJzyB"));
         if (options.isEmpty()) {
-            logger.error("HTML structure changed: Unable to find elements(handleSideBar) for Company: {}, URL: {}", company.getName(), company.getRecruitmentUrl());
-            return List.of();
+            logger.error("HTML structure Error: Unable to find elements in GreetingV1Parser.handleSideBar for Company: {}, URL: {}", company.getName(), company.getRecruitmentUrl());
+            return null;
         }
 
-        List<JobPostingDto> jobPostings = handleJobCards(Objects.requireNonNull(doc.selectFirst("div.sc-9b56f69e-0.enoHnQ")), options, company.getId());
+        Element container = doc.selectFirst("div.sc-9b56f69e-0.enoHnQ");
+        if (container == null) {
+            logger.error("Element not found in GreetingV1Parser.parse.container for Company: {}", company.getName());
+            return null;
+        }
+
+        List<JobPostingDto> jobPostings = handleJobCards(container, options, company.getId());
         if (jobPostings.isEmpty()) {
-            logger.error("HTML structure changed: Unable to find elements(handleJobCards) for Company: {}, URL: {}", company.getName(), company.getRecruitmentUrl());
+            logger.error("HTML structure Error: Unable to find elements in GreetingV1Parser.handleJobCards for Company: {}, URL: {}", company.getName(), company.getRecruitmentUrl());
+            return null;
         }
         return jobPostings;
     }
