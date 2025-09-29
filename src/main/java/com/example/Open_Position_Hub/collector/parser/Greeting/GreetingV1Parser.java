@@ -7,11 +7,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import org.openqa.selenium.NoSuchElementException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -21,7 +19,6 @@ public class GreetingV1Parser implements JobParser {
 
     private static final String key = "그리팅/V1";
     private static final Logger logger = LoggerFactory.getLogger(GreetingV1Parser.class);
-    private enum Field { CATEGORY, EXPERIENCE, EMPLOYMENT, LOCATION }
 
     @Override
     public String layoutKey() {
@@ -31,21 +28,28 @@ public class GreetingV1Parser implements JobParser {
     @Override
     public List<JobPostingDto> parse(Document doc, CompanyEntity company) {
 
-        Map<String, List<String>> options = handleSideBar(doc.select("div.sc-9b56f69e-0.imkSIw.sc-9b6acf96-0.mgFVD").select("div.sc-c7f48e72-0.biJzyB"));
+        Map<String, List<String>> options = handleSideBar(
+            doc.select("div.sc-9b56f69e-0.imkSIw.sc-9b6acf96-0.mgFVD")
+                .select("div.sc-c7f48e72-0.biJzyB"));
         if (options.isEmpty()) {
-            logger.error("HTML structure Error: Unable to find elements in GreetingV1Parser.handleSideBar for Company: {}, URL: {}", company.getName(), company.getRecruitmentUrl());
+            logger.error(
+                "HTML structure Error: Unable to find elements in GreetingV1Parser.handleSideBar for Company: {}, URL: {}",
+                company.getName(), company.getRecruitmentUrl());
             return null;
         }
 
         Element container = doc.selectFirst("div.sc-9b56f69e-0.enoHnQ");
         if (container == null) {
-            logger.error("Element not found in GreetingV1Parser.parse.container for Company: {}", company.getName());
+            logger.error("Element not found in GreetingV1Parser.parse.container for Company: {}",
+                company.getName());
             return null;
         }
 
         List<JobPostingDto> jobPostings = handleJobCards(container, options, company.getId());
         if (jobPostings.isEmpty()) {
-            logger.error("HTML structure Error: Unable to find elements in GreetingV1Parser.handleJobCards for Company: {}, URL: {}", company.getName(), company.getRecruitmentUrl());
+            logger.error(
+                "HTML structure Error: Unable to find elements in GreetingV1Parser.handleJobCards for Company: {}, URL: {}",
+                company.getName(), company.getRecruitmentUrl());
             return null;
         }
         return jobPostings;
@@ -70,7 +74,8 @@ public class GreetingV1Parser implements JobParser {
         return options;
     }
 
-    private List<JobPostingDto> handleJobCards(Element container, Map<String, List<String>> options, Long companyId) {
+    private List<JobPostingDto> handleJobCards(Element container, Map<String, List<String>> options,
+        Long companyId) {
 
         List<JobPostingDto> jobPostings = new ArrayList<>();
 
@@ -94,10 +99,10 @@ public class GreetingV1Parser implements JobParser {
                 Field f = textToField.get(text);
                 if (f != null) {
                     switch (f) {
-                        case CATEGORY   -> category = text;
+                        case CATEGORY -> category = text;
                         case EXPERIENCE -> experienceLevel = text;
                         case EMPLOYMENT -> employmentType = text;
-                        case LOCATION   -> location = text;
+                        case LOCATION -> location = text;
                     }
                 } else if (experienceLevel.isEmpty() && text.contains("경력")) {
                     experienceLevel = text;
@@ -109,7 +114,9 @@ public class GreetingV1Parser implements JobParser {
                 }
             }
 
-            jobPostings.add(new JobPostingDto(title, category, experienceLevel, employmentType, location, href, companyId));
+            jobPostings.add(
+                new JobPostingDto(title, category, experienceLevel, employmentType, location, href,
+                    companyId));
         }
 
         return jobPostings;
@@ -119,11 +126,11 @@ public class GreetingV1Parser implements JobParser {
         Map<String, Field> map = new HashMap<>();
         options.forEach((k, values) -> {
             Field f = switch (k) {
-                case "직군"   -> Field.CATEGORY;
+                case "직군" -> Field.CATEGORY;
                 case "경력사항" -> Field.EXPERIENCE;
                 case "고용형태" -> Field.EMPLOYMENT;
-                case "근무지"  -> Field.LOCATION;
-                default       -> null;
+                case "근무지" -> Field.LOCATION;
+                default -> null;
             };
             if (f != null) {
                 for (String v : values) {
@@ -133,4 +140,6 @@ public class GreetingV1Parser implements JobParser {
         });
         return map;
     }
+
+    private enum Field {CATEGORY, EXPERIENCE, EMPLOYMENT, LOCATION}
 }
