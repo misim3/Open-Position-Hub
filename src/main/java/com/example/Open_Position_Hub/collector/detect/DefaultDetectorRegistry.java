@@ -26,7 +26,7 @@ public class DefaultDetectorRegistry implements DetectorRegistry {
     }
 
     @Override
-    public String detect(String platformKey, Document doc) throws NoSuchElementException {
+    public String detect(String platformKey, Document doc) {
         List<LayoutDetector> candidates = byPlatform.getOrDefault(platformKey, List.of());
         for (LayoutDetector d : candidates) {
             try {
