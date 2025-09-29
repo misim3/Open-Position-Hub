@@ -79,22 +79,14 @@ public class Manager {
             PlatformStrategy platformStrategy = platformRegistry.getStrategy(
                 company.getRecruitmentPlatform());
 
-            List<JobPostingDto> jobPostings = platformStrategy.scrape(doc, company);
-
-            if (jobPostings == null) {
-                logger.error(
-                    "[Manager -> scrape -> processingJobScraping -> scrape] Not Found Detector company: {}, platform: {}",
-                    company.getName(), platformStrategy.platformKey());
+            if (platformStrategy != null) {
+                return platformStrategy.scrape(doc, company);
             }
 
-        } catch (IllegalArgumentException e) {
-            logger.error("[Manager -> scrape -> processingJobScraping -> getStrategy] company: {}, {}",
-                company.getName(), e.getMessage());
         } catch (IOException e) {
-            logger.error("[Manager -> scrape -> processingJobScraping -> fetchHtml] company: {}",
-                company.getName(), e.fillInStackTrace());
+            logger.error("IOException occurs in Fetcher.fetchHtml at {} \n {}", company.getName(),
+                e.toString());
         }
-
         return null;
     }
 
