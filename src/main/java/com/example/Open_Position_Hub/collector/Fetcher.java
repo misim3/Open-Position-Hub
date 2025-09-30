@@ -75,7 +75,7 @@ public class Fetcher {
             }
         }
 
-        logger.error("Failed to fetch url={} after {} attempts", url, MAX_RETRIES);
+        logger.error("Failed to fetch url={} after {} attempts", url, MAX_RETRIES, last);
         return null;
     }
 
