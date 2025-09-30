@@ -72,21 +72,19 @@ public class Manager {
         logger.info("{} Processing job scraping...", company.getName());
         String url = company.getRecruitmentUrl();
 
-        try {
+        Document doc = fetcher.fetchHtml(url);
 
-            Document doc = fetcher.fetchHtml(url);
-
-            PlatformStrategy platformStrategy = platformRegistry.getStrategy(
-                company.getRecruitmentPlatform());
-
-            if (platformStrategy != null) {
-                return platformStrategy.scrape(doc, company);
-            }
-
-        } catch (IOException e) {
-            logger.error("IOException occurs in Fetcher.fetchHtml at {} \n {}", company.getName(),
-                e.toString());
+        if (doc == null) {
+            return null;
         }
+
+        PlatformStrategy platformStrategy = platformRegistry.getStrategy(
+            company.getRecruitmentPlatform());
+
+        if (platformStrategy != null) {
+            return platformStrategy.scrape(doc, company);
+        }
+
         return null;
     }
 
