@@ -6,12 +6,15 @@ import com.example.Open_Position_Hub.collector.parser.ParserRegistry;
 import com.example.Open_Position_Hub.db.CompanyEntity;
 import java.util.List;
 import org.jsoup.nodes.Document;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 @Component
 public class GreetingStrategy implements PlatformStrategy {
 
     private static final String key = "그리팅";
+    private static final Logger logger = LoggerFactory.getLogger(GreetingStrategy.class);
     private final DefaultDetectorRegistry defaultDetectorRegistry;
     private final ParserRegistry parserRegistry;
 
@@ -32,6 +35,7 @@ public class GreetingStrategy implements PlatformStrategy {
         String layoutKey = defaultDetectorRegistry.detect(platformKey(), doc);
 
         if (layoutKey == null) {
+            logger.warn("Not matched proper detector for company : {} ", company.getName());
             return null;
         }
 

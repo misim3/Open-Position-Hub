@@ -1,6 +1,5 @@
 package com.example.Open_Position_Hub.collector.detect;
 
-import java.util.NoSuchElementException;
 import org.jsoup.nodes.Document;
 
 public interface LayoutDetector {
@@ -9,6 +8,6 @@ public interface LayoutDetector {
 
     int order();
 
-    String detect(Document doc) throws NoSuchElementException;
+    String detect(Document doc);
 
 }
