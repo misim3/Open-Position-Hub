@@ -2,6 +2,7 @@ package com.example.Open_Position_Hub.collector.platform;
 
 import com.example.Open_Position_Hub.collector.JobPostingDto;
 import com.example.Open_Position_Hub.collector.detect.DefaultDetectorRegistry;
+import com.example.Open_Position_Hub.collector.parser.JobParser;
 import com.example.Open_Position_Hub.collector.parser.ParserRegistry;
 import com.example.Open_Position_Hub.db.CompanyEntity;
 import java.util.List;
@@ -39,7 +40,13 @@ public class GreetingStrategy implements PlatformStrategy {
             return null;
         }
 
-        return parserRegistry.get(layoutKey).parse(doc, company);
+        JobParser jobParser = parserRegistry.get(layoutKey);
+
+        if (jobParser == null) {
+            return null;
+        }
+
+        return jobParser.parse(doc, company);
     }
 
     @Override
