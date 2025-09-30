@@ -27,7 +27,7 @@ class PlatformRegistryTest {
 
     @Test
     @DisplayName("지원하는 전략이 없으면 예외를 던진다")
-    void getStrategy_throwsWhenNoStrategyFound() {
+    void getStrategy_returnNullWhenNoStrategyFound() {
         PlatformStrategy s1 = mock(PlatformStrategy.class);
         PlatformStrategy s2 = mock(PlatformStrategy.class);
 
@@ -36,11 +36,8 @@ class PlatformRegistryTest {
 
         PlatformRegistry registry = new PlatformRegistry(List.of(s1, s2));
 
-        IllegalArgumentException ex = assertThrows(
-            IllegalArgumentException.class,
-            () -> registry.getStrategy("프로그래머스")
-        );
-        assertTrue(ex.getMessage().contains("프로그래머스"));
+        PlatformStrategy platformStrategy = registry.getStrategy("프로그래머스");
+        assertNull(platformStrategy);
     }
 
     @Test
