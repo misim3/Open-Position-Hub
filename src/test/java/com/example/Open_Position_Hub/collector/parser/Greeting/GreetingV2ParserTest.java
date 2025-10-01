@@ -1,6 +1,8 @@
 package com.example.Open_Position_Hub.collector.parser.Greeting;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -47,28 +49,28 @@ class GreetingV2ParserTest {
         // - 상세: span.sc-86b147bc-0.bugutw.sc-708ae078-1.gAEjfw 내부에
         //         span.sc-708ae078-3.hBUoLe 로 실제 텍스트가 들어감
         String html = """
-        <div class="sc-9b56f69e-0 enoHnQ">
-          <ul>
-            <li>
-              <a href="https://example.com/j3">
-                <span class="sc-86b147bc-0 gIOkaZ sc-f484a550-1 gMeHeg">플랫폼 백엔드</span>
-                <span class="sc-86b147bc-0 bugutw sc-708ae078-1 gAEjfw">
-                  <span class="sc-708ae078-3 hBUoLe">백엔드</span>
-                </span>
-                <span class="sc-86b147bc-0 bugutw sc-708ae078-1 gAEjfw">
-                  <span class="sc-708ae078-3 hBUoLe">신입</span>
-                </span>
-                <span class="sc-86b147bc-0 bugutw sc-708ae078-1 gAEjfw">
-                  <span class="sc-708ae078-3 hBUoLe">정규직</span>
-                </span>
-                <span class="sc-86b147bc-0 bugutw sc-708ae078-1 gAEjfw">
-                  <span class="sc-708ae078-3 hBUoLe">서울</span>
-                </span>
-              </a>
-            </li>
-          </ul>
-        </div>
-        """;
+            <div class="sc-9b56f69e-0 enoHnQ">
+              <ul>
+                <li>
+                  <a href="https://example.com/j3">
+                    <span class="sc-86b147bc-0 gIOkaZ sc-f484a550-1 gMeHeg">플랫폼 백엔드</span>
+                    <span class="sc-86b147bc-0 bugutw sc-708ae078-1 gAEjfw">
+                      <span class="sc-708ae078-3 hBUoLe">백엔드</span>
+                    </span>
+                    <span class="sc-86b147bc-0 bugutw sc-708ae078-1 gAEjfw">
+                      <span class="sc-708ae078-3 hBUoLe">신입</span>
+                    </span>
+                    <span class="sc-86b147bc-0 bugutw sc-708ae078-1 gAEjfw">
+                      <span class="sc-708ae078-3 hBUoLe">정규직</span>
+                    </span>
+                    <span class="sc-86b147bc-0 bugutw sc-708ae078-1 gAEjfw">
+                      <span class="sc-708ae078-3 hBUoLe">서울</span>
+                    </span>
+                  </a>
+                </li>
+              </ul>
+            </div>
+            """;
 
         Document doc = Jsoup.parse(html);
         CompanyEntity company = mock(CompanyEntity.class);
@@ -86,8 +88,8 @@ class GreetingV2ParserTest {
     }
 
     @Test
-    @DisplayName("카드가 없으면 빈 리스트")
-    void parse_returnsEmptyWhenNoCards() {
+    @DisplayName("카드가 없으면 null 반환")
+    void parse_returnNullWhenNoCards() {
         GreetingV2Parser parser = Mockito.spy(new GreetingV2Parser());
         // options 비우면 parse가 바로 빈 리스트 반환(컨테이너 selectFirst 이전에 종료)
         doReturn(Map.of()).when(parser).handleFilterBar(anyString());
@@ -98,6 +100,6 @@ class GreetingV2ParserTest {
         when(company.getName()).thenReturn("ExampleCo");
 
         List<JobPostingDto> result = parser.parse(doc, company);
-        assertTrue(result.isEmpty());
+        assertNull(result);
     }
 }

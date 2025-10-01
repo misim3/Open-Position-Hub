@@ -1,8 +1,9 @@
 package com.example.Open_Position_Hub.collector.detect;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
-import java.util.Optional;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.junit.jupiter.api.DisplayName;
@@ -23,16 +24,16 @@ class GreetingV1DetectorTest {
     void detect_hitsWhenListViewTypeB() {
         GreetingV1Detector d = new GreetingV1Detector();
         Document doc = Jsoup.parse("<div listviewtype='b'></div>");
-        Optional<String> hit = d.detect(doc);
-        assertTrue(hit.isPresent());
-        assertEquals("그리팅/V1", hit.get());
+        String hit = d.detect(doc);
+        assertNotNull(hit);
+        assertEquals("그리팅/V1", hit);
     }
 
     @Test
-    @DisplayName("해당 요소가 없으면 empty")
-    void detect_returnsEmptyWhenNoMatch() {
+    @DisplayName("해당 요소가 없으면 null")
+    void detect_returnNullWhenNoMatch() {
         GreetingV1Detector d = new GreetingV1Detector();
         Document doc = Jsoup.parse("<div listviewtype='a'></div>");
-        assertTrue(d.detect(doc).isEmpty());
+        assertNull(d.detect(doc));
     }
 }

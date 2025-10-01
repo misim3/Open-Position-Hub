@@ -1,6 +1,5 @@
 package com.example.Open_Position_Hub.collector.detect;
 
-import java.util.Optional;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.springframework.stereotype.Component;
@@ -21,11 +20,11 @@ public class GreetingV2Detector implements LayoutDetector {
     }
 
     @Override
-    public Optional<String> detect(Document doc) {
+    public String detect(Document doc) {
         Element listViewA = doc.selectFirst("div[listviewtype='a']");
         if (listViewA != null) {
-            return Optional.of(platformKey() + "/V2");
+            return platformKey() + "/V2";
         }
-        return Optional.empty();
+        return null;
     }
 }

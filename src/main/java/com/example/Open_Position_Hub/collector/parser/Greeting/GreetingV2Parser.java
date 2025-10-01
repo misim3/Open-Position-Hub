@@ -9,7 +9,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
@@ -36,7 +35,6 @@ import org.springframework.stereotype.Component;
 public class GreetingV2Parser implements JobParser {
 
     private static final String key = "그리팅/V2";
-    private enum Field { CATEGORY, EXPERIENCE, EMPLOYMENT, LOCATION }
     private static final Logger logger = LoggerFactory.getLogger(GreetingV2Parser.class);
 
     @Override
@@ -49,14 +47,25 @@ public class GreetingV2Parser implements JobParser {
 
         Map<String, List<String>> options = handleFilterBar(company.getRecruitmentUrl());
         if (options.isEmpty()) {
-            logger.error("HTML structure changed: Unable to find elements(handleFilterBar) for Company: {}, URL: {}", company.getName(), company.getRecruitmentUrl());
-            return List.of();
+            logger.error(
+                "HTML structure Error: Unable to find elements in GreetingV2Parser.handleSideBar for Company: {}, URL: {}",
+                company.getName(), company.getRecruitmentUrl());
+            return null;
         }
 
-        List<JobPostingDto> jobPostings = handleJobCards(
-            Objects.requireNonNull(doc.selectFirst("div.sc-9b56f69e-0.enoHnQ")), options, company.getId());
+        Element container = doc.selectFirst("div.sc-9b56f69e-0.enoHnQ");
+        if (container == null) {
+            logger.error("Element not found in GreetingV2Parser.parse.container for Company: {}",
+                company.getName());
+            return null;
+        }
+
+        List<JobPostingDto> jobPostings = handleJobCards(container, options, company.getId());
         if (jobPostings.isEmpty()) {
-            logger.error("HTML structure changed: Unable to find elements(handleJobCards) for Company: {}, URL: {}", company.getName(), company.getRecruitmentUrl());
+            logger.error(
+                "HTML structure Error: Unable to find elements in GreetingV2Parser.handleJobCards for Company: {}, URL: {}",
+                company.getName(), company.getRecruitmentUrl());
+            return null;
         }
         return jobPostings;
     }
@@ -93,13 +102,15 @@ public class GreetingV2Parser implements JobParser {
             getFilterOptions(driver, wait, filterOptions);
 
         } catch (TimeoutException e) {
-            logger.warn("TimeoutException: Page loading timeout exceeded. URL: {}", url, e);
+            logger.warn("TimeoutException: Page loading timeout exceeded. URL: {}, {}", url,
+                e.getMessage());
 
         } catch (WebDriverException e) {
-            logger.error("WebDriverException: Failed to execute WebDriver - URL: {}", url, e);
+            logger.error("WebDriverException: Failed to execute WebDriver - URL: {}, {}", url,
+                e.getMessage());
 
         } catch (Exception e) {
-            logger.error("Unexpected exception occurred - URL: {}", url, e);
+            logger.error("Unexpected exception occurred - URL: {}, {}", url, e.getMessage());
 
         } finally {
             driver.quit();
@@ -109,11 +120,12 @@ public class GreetingV2Parser implements JobParser {
 
     private void closePopupIfPresent(WebDriver driver, WebDriverWait wait) {
 
-        WebDriverWait quickWait  = new WebDriverWait(driver, Duration.ofMillis(500));
+        WebDriverWait quickWait = new WebDriverWait(driver, Duration.ofMillis(500));
         try {
-            quickWait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("div.modal")));
+            quickWait.until(
+                ExpectedConditions.presenceOfElementLocated(By.cssSelector("div.modal")));
         } catch (TimeoutException e) {
-            return ;
+            return;
         }
 
         try {
@@ -133,20 +145,26 @@ public class GreetingV2Parser implements JobParser {
             wait.until(ExpectedConditions.invisibilityOf(element));
 
         } catch (NoSuchElementException | StaleElementReferenceException | TimeoutException e) {
-            logger.error("[GreetingV2Parser - closePopup] Fail to close Popup: ", e.fillInStackTrace());
+            logger.error("Fail to close Popup in GreetingV2Parser.closePopupIfPresent {}",
+                e.getMessage());
         }
     }
 
     // 특정 필터(구분, 직군, 경력사항 등)의 선택지를 가져오는 메서드
-    private void getFilterOptions(WebDriver driver, WebDriverWait wait, Map<String, List<String>> filterOptions) {
+    private void getFilterOptions(WebDriver driver, WebDriverWait wait,
+        Map<String, List<String>> filterOptions) {
         // 필터 라벨(span) 로드 대기
-        wait.until(ExpectedConditions.presenceOfAllElementsLocatedBy(By.cssSelector("span.sc-86b147bc-0.ghZIoe")));
+        wait.until(ExpectedConditions.presenceOfAllElementsLocatedBy(
+            By.cssSelector("span.sc-86b147bc-0.ghZIoe")));
 
         for (int i = 0; ; i++) {
-            List<WebElement> labels = driver.findElements(By.cssSelector("span.sc-86b147bc-0.ghZIoe"));
+            List<WebElement> labels = driver.findElements(
+                By.cssSelector("span.sc-86b147bc-0.ghZIoe"));
             // 표시 중인 라벨만 대상으로
             labels = labels.stream().filter(WebElement::isDisplayed).toList();
-            if (i >= labels.size()) break; // 종료
+            if (i >= labels.size()) {
+                break; // 종료
+            }
 
             WebElement label = labels.get(i);
             String text = label.getText();
@@ -155,13 +173,16 @@ public class GreetingV2Parser implements JobParser {
             // 실제 클릭 가능한 조상(button/role=button) 우선 사용
             WebElement clickable = label;
             try {
-                clickable = label.findElement(By.xpath("./ancestor-or-self::*[self::button or @role='button'][1]"));
-            } catch (NoSuchElementException ignore) { }
+                clickable = label.findElement(
+                    By.xpath("./ancestor-or-self::*[self::button or @role='button'][1]"));
+            } catch (NoSuchElementException ignore) {
+            }
 
             // 클릭 시도 (일반 → JS 대체)
             try {
                 try {
-                    new Actions(driver).moveToElement(clickable).pause(Duration.ofMillis(80)).click().perform();
+                    new Actions(driver).moveToElement(clickable).pause(Duration.ofMillis(80))
+                        .click().perform();
                 } catch (ElementNotInteractableException e) {
                     ((JavascriptExecutor) driver).executeScript("arguments[0].click();", clickable);
                 }
@@ -171,17 +192,20 @@ public class GreetingV2Parser implements JobParser {
                     .filter(WebElement::isDisplayed).toList();
                 if (i < labels.size()) {
                     label = labels.get(i);
-                    try { ((JavascriptExecutor) driver).executeScript("arguments[0].click();", label); }
-                    catch (Exception ignore2) { /* 다음으로 진행 */ }
+                    try {
+                        ((JavascriptExecutor) driver).executeScript("arguments[0].click();", label);
+                    } catch (Exception ignore2) { /* 다음으로 진행 */ }
                 }
             }
 
             // 드롭다운 로드/가시성 대기
-            WebElement dropdown = wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("#dropdown-portal")));
+            WebElement dropdown = wait.until(
+                ExpectedConditions.visibilityOfElementLocated(By.cssSelector("#dropdown-portal")));
 
             List<WebElement> optionElements = wait.until(
                 ExpectedConditions.presenceOfAllElementsLocatedBy(
-                    By.cssSelector("#dropdown-portal span.sc-86b147bc-0.ONaOy, #dropdown-portal [role='menuitem'], #dropdown-portal li")
+                    By.cssSelector(
+                        "#dropdown-portal span.sc-86b147bc-0.ONaOy, #dropdown-portal [role='menuitem'], #dropdown-portal li")
                 )
             );
 
@@ -189,7 +213,9 @@ public class GreetingV2Parser implements JobParser {
             for (WebElement op : optionElements) {
                 if (op.isDisplayed()) {
                     String val = op.getText().trim();
-                    if (!val.isEmpty()) options.add(val);
+                    if (!val.isEmpty()) {
+                        options.add(val);
+                    }
                 }
             }
             filterOptions.put(name, options);
@@ -199,7 +225,8 @@ public class GreetingV2Parser implements JobParser {
         }
     }
 
-    private List<JobPostingDto> handleJobCards(Element container, Map<String, List<String>> options, Long companyId) {
+    private List<JobPostingDto> handleJobCards(Element container, Map<String, List<String>> options,
+        Long companyId) {
 
         List<JobPostingDto> jobPostings = new ArrayList<>();
 
@@ -223,10 +250,10 @@ public class GreetingV2Parser implements JobParser {
                 Field f = textToField.get(text);
                 if (f != null) {
                     switch (f) {
-                        case CATEGORY   -> category = text;
+                        case CATEGORY -> category = text;
                         case EXPERIENCE -> experienceLevel = text;
                         case EMPLOYMENT -> employmentType = text;
-                        case LOCATION   -> location = text;
+                        case LOCATION -> location = text;
                     }
                 } else if (experienceLevel.isEmpty() && text.contains("경력")) {
                     experienceLevel = text;
@@ -238,7 +265,9 @@ public class GreetingV2Parser implements JobParser {
                 }
             }
 
-            jobPostings.add(new JobPostingDto(title, category, experienceLevel, employmentType, location, href, companyId));
+            jobPostings.add(
+                new JobPostingDto(title, category, experienceLevel, employmentType, location, href,
+                    companyId));
         }
 
         return jobPostings;
@@ -248,11 +277,11 @@ public class GreetingV2Parser implements JobParser {
         Map<String, Field> map = new HashMap<>();
         options.forEach((k, values) -> {
             Field f = switch (k) {
-                case "직군"   -> Field.CATEGORY;
+                case "직군" -> Field.CATEGORY;
                 case "경력사항" -> Field.EXPERIENCE;
                 case "고용형태" -> Field.EMPLOYMENT;
-                case "근무지"  -> Field.LOCATION;
-                default       -> null;
+                case "근무지" -> Field.LOCATION;
+                default -> null;
             };
             if (f != null) {
                 for (String v : values) {
@@ -262,4 +291,6 @@ public class GreetingV2Parser implements JobParser {
         });
         return map;
     }
+
+    private enum Field {CATEGORY, EXPERIENCE, EMPLOYMENT, LOCATION}
 }

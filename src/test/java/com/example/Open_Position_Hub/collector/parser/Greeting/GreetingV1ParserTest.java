@@ -1,6 +1,8 @@
 package com.example.Open_Position_Hub.collector.parser.Greeting;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -35,49 +37,49 @@ class GreetingV1ParserTest {
         //   제목: span.sc-86b147bc-0.gIOkaZ.sc-f484a550-1.gMeHeg
         //   상세: span.sc-86b147bc-0.bugutw.sc-708ae078-1.gAEjfw > span.sc-708ae078-3.hBUoLe
         String html = """
-        <div class="sc-9b56f69e-0 imkSIw sc-9b6acf96-0 mgFVD">
-          <div class="sc-c7f48e72-0 biJzyB">
-            <span class="sc-86b147bc-0 jrtDxx">직군</span>
-            <label role="checkbox"><span class="sc-86b147bc-0 cvrGje">백엔드</span></label>
-          </div>
-          <div class="sc-c7f48e72-0 biJzyB">
-            <span class="sc-86b147bc-0 jrtDxx">경력사항</span>
-            <label role="checkbox"><span class="sc-86b147bc-0 cvrGje">신입</span></label>
-            <label role="checkbox"><span class="sc-86b147bc-0 cvrGje">3년 이상</span></label>
-          </div>
-          <div class="sc-c7f48e72-0 biJzyB">
-            <span class="sc-86b147bc-0 jrtDxx">고용형태</span>
-            <label role="checkbox"><span class="sc-86b147bc-0 cvrGje">정규직</span></label>
-          </div>
-          <div class="sc-c7f48e72-0 biJzyB">
-            <span class="sc-86b147bc-0 jrtDxx">근무지</span>
-            <label role="checkbox"><span class="sc-86b147bc-0 cvrGje">서울</span></label>
-          </div>
-        </div>
-
-        <div class="sc-9b56f69e-0 enoHnQ">
-          <ul>
-            <li>
-              <a href="https://example.com/j1">
-                <span class="sc-86b147bc-0 gIOkaZ sc-f484a550-1 gMeHeg">백엔드 개발자</span>
-                <span class="sc-86b147bc-0 bugutw sc-708ae078-1 gAEjfw"><span class="sc-708ae078-3 hBUoLe">백엔드</span></span>
-                <span class="sc-86b147bc-0 bugutw sc-708ae078-1 gAEjfw"><span class="sc-708ae078-3 hBUoLe">신입</span></span>
-                <span class="sc-86b147bc-0 bugutw sc-708ae078-1 gAEjfw"><span class="sc-708ae078-3 hBUoLe">정규직</span></span>
-                <span class="sc-86b147bc-0 bugutw sc-708ae078-1 gAEjfw"><span class="sc-708ae078-3 hBUoLe">서울</span></span>
-              </a>
-            </li>
-            <li>
-              <a href="https://example.com/j2">
-                <span class="sc-86b147bc-0 gIOkaZ sc-f484a550-1 gMeHeg">서버 개발자</span>
-                <span class="sc-86b147bc-0 bugutw sc-708ae078-1 gAEjfw"><span class="sc-708ae078-3 hBUoLe">백엔드</span></span>
-                <span class="sc-86b147bc-0 bugutw sc-708ae078-1 gAEjfw"><span class="sc-708ae078-3 hBUoLe">3년 이상</span></span>
-                <span class="sc-86b147bc-0 bugutw sc-708ae078-1 gAEjfw"><span class="sc-708ae078-3 hBUoLe">정규직</span></span>
-                <span class="sc-86b147bc-0 bugutw sc-708ae078-1 gAEjfw"><span class="sc-708ae078-3 hBUoLe">서울</span></span>
-              </a>
-            </li>
-          </ul>
-        </div>
-        """;
+            <div class="sc-9b56f69e-0 imkSIw sc-9b6acf96-0 mgFVD">
+              <div class="sc-c7f48e72-0 biJzyB">
+                <span class="sc-86b147bc-0 jrtDxx">직군</span>
+                <label role="checkbox"><span class="sc-86b147bc-0 cvrGje">백엔드</span></label>
+              </div>
+              <div class="sc-c7f48e72-0 biJzyB">
+                <span class="sc-86b147bc-0 jrtDxx">경력사항</span>
+                <label role="checkbox"><span class="sc-86b147bc-0 cvrGje">신입</span></label>
+                <label role="checkbox"><span class="sc-86b147bc-0 cvrGje">3년 이상</span></label>
+              </div>
+              <div class="sc-c7f48e72-0 biJzyB">
+                <span class="sc-86b147bc-0 jrtDxx">고용형태</span>
+                <label role="checkbox"><span class="sc-86b147bc-0 cvrGje">정규직</span></label>
+              </div>
+              <div class="sc-c7f48e72-0 biJzyB">
+                <span class="sc-86b147bc-0 jrtDxx">근무지</span>
+                <label role="checkbox"><span class="sc-86b147bc-0 cvrGje">서울</span></label>
+              </div>
+            </div>
+            
+            <div class="sc-9b56f69e-0 enoHnQ">
+              <ul>
+                <li>
+                  <a href="https://example.com/j1">
+                    <span class="sc-86b147bc-0 gIOkaZ sc-f484a550-1 gMeHeg">백엔드 개발자</span>
+                    <span class="sc-86b147bc-0 bugutw sc-708ae078-1 gAEjfw"><span class="sc-708ae078-3 hBUoLe">백엔드</span></span>
+                    <span class="sc-86b147bc-0 bugutw sc-708ae078-1 gAEjfw"><span class="sc-708ae078-3 hBUoLe">신입</span></span>
+                    <span class="sc-86b147bc-0 bugutw sc-708ae078-1 gAEjfw"><span class="sc-708ae078-3 hBUoLe">정규직</span></span>
+                    <span class="sc-86b147bc-0 bugutw sc-708ae078-1 gAEjfw"><span class="sc-708ae078-3 hBUoLe">서울</span></span>
+                  </a>
+                </li>
+                <li>
+                  <a href="https://example.com/j2">
+                    <span class="sc-86b147bc-0 gIOkaZ sc-f484a550-1 gMeHeg">서버 개발자</span>
+                    <span class="sc-86b147bc-0 bugutw sc-708ae078-1 gAEjfw"><span class="sc-708ae078-3 hBUoLe">백엔드</span></span>
+                    <span class="sc-86b147bc-0 bugutw sc-708ae078-1 gAEjfw"><span class="sc-708ae078-3 hBUoLe">3년 이상</span></span>
+                    <span class="sc-86b147bc-0 bugutw sc-708ae078-1 gAEjfw"><span class="sc-708ae078-3 hBUoLe">정규직</span></span>
+                    <span class="sc-86b147bc-0 bugutw sc-708ae078-1 gAEjfw"><span class="sc-708ae078-3 hBUoLe">서울</span></span>
+                  </a>
+                </li>
+              </ul>
+            </div>
+            """;
 
         Document doc = Jsoup.parse(html);
         CompanyEntity company = mock(CompanyEntity.class);
@@ -95,8 +97,8 @@ class GreetingV1ParserTest {
     }
 
     @Test
-    @DisplayName("카드가 없으면 빈 리스트")
-    void parse_returnsEmptyWhenNoCards() {
+    @DisplayName("카드가 없으면 null 반환")
+    void parse_returnNullWhenNoCards() {
         GreetingV1Parser parser = new GreetingV1Parser();
         Document doc = Jsoup.parse("<div id='empty'></div>");
         CompanyEntity company = mock(CompanyEntity.class);
@@ -104,6 +106,6 @@ class GreetingV1ParserTest {
         when(company.getRecruitmentUrl()).thenReturn("https://greeting.example/jobs");
 
         List<JobPostingDto> result = parser.parse(doc, company);
-        assertTrue(result.isEmpty());
+        assertNull(result);
     }
 }

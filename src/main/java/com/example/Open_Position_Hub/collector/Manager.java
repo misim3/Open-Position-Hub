@@ -2,6 +2,7 @@ package com.example.Open_Position_Hub.collector;
 
 import com.example.Open_Position_Hub.collector.checker.DeadLinkChecker;
 import com.example.Open_Position_Hub.collector.platform.PlatformRegistry;
+import com.example.Open_Position_Hub.collector.platform.PlatformStrategy;
 import com.example.Open_Position_Hub.db.BaseEntity;
 import com.example.Open_Position_Hub.db.CompanyEntity;
 import com.example.Open_Position_Hub.db.CompanyRepository;
@@ -16,7 +17,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -30,7 +30,7 @@ import org.springframework.stereotype.Component;
 public class Manager {
 
     private static final Logger logger = LoggerFactory.getLogger(Manager.class);
-    private final Scraper scraper;
+    private final Fetcher fetcher;
     private final JobPostingRepository jobPostingRepository;
     private final CompanyRepository companyRepository;
     private final PlatformRegistry platformRegistry;
@@ -38,12 +38,12 @@ public class Manager {
 
     private final AtomicInteger counterForCheck;
 
-    public Manager(Scraper scraper,
+    public Manager(Fetcher fetcher,
         JobPostingRepository jobPostingRepository,
         CompanyRepository companyRepository,
         PlatformRegistry platformRegistry,
         DeadLinkChecker deadLinkChecker) {
-        this.scraper = scraper;
+        this.fetcher = fetcher;
         this.jobPostingRepository = jobPostingRepository;
         this.companyRepository = companyRepository;
         this.platformRegistry = platformRegistry;
@@ -56,29 +56,38 @@ public class Manager {
         System.out.println("Start scraping...");
 //        List<CompanyEntity> companies = companyRepository.findAll();
         List<CompanyEntity> companies = companyRepository.findAllByRecruitmentPlatform("그리팅");
-        companies.forEach(company -> saveJobPostings(processJobScraping(company)));
+        for (CompanyEntity company : companies) {
+            List<JobPostingDto> jobPostings = processJobScraping(company);
+            if (jobPostings == null || jobPostings.isEmpty()) {
+                continue;
+            }
+            saveJobPostings(jobPostings);
+        }
         System.out.println("Done!");
     }
 
     private List<JobPostingDto> processJobScraping(CompanyEntity company) {
 
         logger.info("{} Processing job scraping...", company.getName());
+        String url = company.getRecruitmentUrl();
 
-        Optional<Document> doc = scraper.fetchHtml(company.getRecruitmentUrl());
+        Document doc = fetcher.fetchHtml(url);
 
-        if (doc.isPresent()) {
-            return platformRegistry.getStrategy(company.getRecruitmentPlatform())
-                .scrape(doc.get(), company);
+        if (doc == null) {
+            return null;
         }
 
-        return List.of();
+        PlatformStrategy platformStrategy = platformRegistry.getStrategy(
+            company.getRecruitmentPlatform());
+
+        if (platformStrategy != null) {
+            return platformStrategy.scrape(doc, company);
+        }
+
+        return null;
     }
 
     private void saveJobPostings(List<JobPostingDto> scrapedJobPostings) {
-
-        if (scrapedJobPostings.isEmpty()) {
-            return;
-        }
 
         List<JobPostingDto> jobPostings = new HashSet<>(scrapedJobPostings).stream().toList();
 
@@ -132,7 +141,8 @@ public class Manager {
 
         Map<String, Long> checkUrlToEntityId = new HashMap<>(jobPostingEntities.size());
         List<JobPostingDto> jobPostingsForCheck = new ArrayList<>(jobPostingEntities.size());
-        Set<Long> companyIds = jobPostingEntities.stream().map(JobPostingEntity::getCompanyId).collect(Collectors.toSet());
+        Set<Long> companyIds = jobPostingEntities.stream().map(JobPostingEntity::getCompanyId)
+            .collect(Collectors.toSet());
         Map<Long, CompanyEntity> companyMap = companyRepository.findAllById(companyIds).stream()
             .collect(Collectors.toMap(BaseEntity::getId, company -> company));
 
@@ -190,7 +200,9 @@ public class Manager {
             URI detail = new URI(detailUrl);
             return base.resolve(detail).toString();
         } catch (URISyntaxException e) {
-            throw new RuntimeException("Invalid BASE URL: " + recruitmentUrl + ", DETAIL: " + detailUrl, e.fillInStackTrace());
+            throw new RuntimeException(
+                "Invalid BASE URL: " + recruitmentUrl + ", DETAIL: " + detailUrl,
+                e.fillInStackTrace());
         }
     }
 
