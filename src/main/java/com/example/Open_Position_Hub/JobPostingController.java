@@ -23,19 +23,14 @@ public class JobPostingController {
     @GetMapping("/jobs")
     public ResponseEntity<Page<JobPosting>> getFilteredJobPostings(
         @RequestParam(name = "titles", required = false) List<String> titles,
-        @RequestParam(name = "companyNames", required = false) List<String> companyNames,
         @RequestParam(name = "page", required = false, defaultValue = "0") int page,
         @RequestParam(name = "size", required = false, defaultValue = "20") int size) {
 
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         Page<JobPosting> jobPostings;
 
-        if (titles != null && companyNames != null) {
-            jobPostings = jobPostingService.getJobPostingsByTitlesAndCompanyNames(titles, companyNames, pageable);
-        } else if (titles != null) {
+        if (titles != null && !titles.isEmpty()) {
             jobPostings = jobPostingService.getJobPostingsByTitles(titles, pageable);
-        } else if (companyNames != null) {
-            jobPostings = jobPostingService.getJobPostingsByCompanyNames(companyNames, pageable);
         } else {
             jobPostings = jobPostingService.getAllJobPostings(pageable);
         }
