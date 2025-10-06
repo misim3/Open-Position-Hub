@@ -1,7 +1,5 @@
 package com.example.Open_Position_Hub.db;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -44,20 +42,15 @@ public class JobPostingSearchRepository {
     }
 
     private static RowMapper<JobPostingEntity> mapper() {
-        return new RowMapper<>() {
-            @Override
-            public JobPostingEntity mapRow(ResultSet rs, int rowNum) throws SQLException {
-                return new JobPostingEntity(
-                    rs.getString("title"),
-                    rs.getString("category"),
-                    rs.getString("experienceLevel"),
-                    rs.getString("employmentType"),
-                    rs.getString("location"),
-                    rs.getString("detailUrl"),
-                    rs.getLong("companyId")
-                );
-            }
-        };
+        return (rs, rowNum) -> new JobPostingEntity(
+            rs.getString("title"),
+            rs.getString("category"),
+            rs.getString("experienceLevel"),
+            rs.getString("employmentType"),
+            rs.getString("location"),
+            rs.getString("detailUrl"),
+            rs.getLong("companyId")
+        );
     }
 
     public Page<JobPostingEntity> findByTitles(List<String> titles, Pageable pageable) {
