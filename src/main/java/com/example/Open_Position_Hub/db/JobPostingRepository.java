@@ -10,6 +10,8 @@ import org.springframework.data.repository.query.Param;
 
 public interface JobPostingRepository extends JpaRepository<JobPostingEntity, Long> {
 
+    Page<JobPostingEntity> findByTitleLike(String title, Pageable pageable);
+
     Page<JobPostingEntity> findByTitleIn(Collection<String> titles, Pageable pageable);
 
     @Query("select distinct j.title from JobPostingEntity j where j.title is not null ")
