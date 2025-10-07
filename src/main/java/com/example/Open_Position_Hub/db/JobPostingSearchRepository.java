@@ -16,7 +16,6 @@ import org.springframework.stereotype.Repository;
 public class JobPostingSearchRepository {
 
     private static final String TABLE = "job_posting_entity";
-    private static final String CS_COLLATION = "utf8mb4_bin";
 
     private final JdbcTemplate jdbc;
 
@@ -27,7 +26,7 @@ public class JobPostingSearchRepository {
     private static String buildWhereForTitles(List<String> titles) {
         return titles.stream()
             .filter(Objects::nonNull)
-            .map(t -> "title COLLATE " + CS_COLLATION + " LIKE ? ESCAPE '\\\\'")
+            .map(t -> "title LIKE ? ESCAPE '\\\\'")
             .collect(Collectors.joining(" OR "));
     }
 
