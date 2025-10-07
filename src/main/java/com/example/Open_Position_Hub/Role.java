@@ -8,11 +8,12 @@ public enum Role {
     FRONTEND(List.of("프론트엔드", "FrontEnd", "FE", "Front-End", "Front-end")),
     ANDROID(List.of("안드로이드", "Android", "AOS", "App", "APP", "앱", "모바일")),
     IOS(List.of("IOS", "iOS", "App", "APP", "앱", "모바일")),
-    DATA(List.of()),
-    AI(List.of()),
-    DEVOPS(List.of()),
-    QA(List.of()),
-    BLOCKCHAIN(List.of()),
+    DATA(List.of("DATA", "Data", "데이터")),
+    AI(List.of("AI", "ML", "머신러닝", "LLM", "Machine Learning", "딥러닝", "Deep Learning")),
+    DEVOPS(List.of("DEVOPS", "DevOps", "Devops", "devops", "데브옵스", "SRE", "INFRA", "System")),
+    QA(List.of("QA", "Qa", "테스트", "Test", "Quality")),
+    BLOCKCHAIN(List.of("볼록체인", "BLOCKCHAIN", "BlockChain", "디파이", "DApp", "코인", "Web3", "컨트랙트", "메인넷")),
+    GAME(List.of("GAME", "게임", "클라이언트", "Unity")),
     ;
 
     public final List<String> includes;
