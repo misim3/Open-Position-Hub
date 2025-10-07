@@ -6,6 +6,7 @@ import com.example.Open_Position_Hub.db.JobPostingEntity;
 import com.example.Open_Position_Hub.db.JobPostingSearchRepository;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -50,7 +51,14 @@ public class JobPostingService {
         return new PageImpl<>(jobPostings, pageable, jobPostingEntityList.getTotalElements());
     }
 
-    public Page<JobPosting> getJobPostingsByTitles(List<String> titles, Pageable pageable) {
+    public Page<JobPosting> getJobPostingsByTitles(List<String> roles, Pageable pageable) {
+
+        List<String> titles = new ArrayList<>();
+
+        for (String role : roles) {
+            Role roleEnum = Role.valueOf(role);
+            titles.addAll(roleEnum.includes);
+        }
 
         Page<JobPostingEntity> jobPostingEntityList = jobPostingSearchRepository.findByTitles(
             titles,
