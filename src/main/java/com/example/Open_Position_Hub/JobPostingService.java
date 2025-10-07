@@ -3,9 +3,10 @@ package com.example.Open_Position_Hub;
 import com.example.Open_Position_Hub.db.CompanyEntity;
 import com.example.Open_Position_Hub.db.CompanyRepository;
 import com.example.Open_Position_Hub.db.JobPostingEntity;
-import com.example.Open_Position_Hub.db.JobPostingRepository;
+import com.example.Open_Position_Hub.db.JobPostingSearchRepository;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,18 +18,18 @@ import org.springframework.stereotype.Service;
 @Service
 public class JobPostingService {
 
-    private final JobPostingRepository jobPostingRepository;
+    private final JobPostingSearchRepository jobPostingSearchRepository;
     private final CompanyRepository companyRepository;
 
-    public JobPostingService(JobPostingRepository jobPostingRepository,
-        CompanyRepository companyRepository) {
-        this.jobPostingRepository = jobPostingRepository;
+    public JobPostingService(CompanyRepository companyRepository,
+        JobPostingSearchRepository jobPostingSearchRepository) {
         this.companyRepository = companyRepository;
+        this.jobPostingSearchRepository = jobPostingSearchRepository;
     }
 
     public Page<JobPosting> getAllJobPostings(Pageable pageable) {
 
-        Page<JobPostingEntity> jobPostingEntityList = jobPostingRepository.findAll(pageable);
+        Page<JobPostingEntity> jobPostingEntityList = jobPostingSearchRepository.findAll(pageable);
 
         List<JobPosting> jobPostings = jobPostingEntityList.get()
             .map(job -> {
@@ -51,7 +52,8 @@ public class JobPostingService {
 
     public Page<JobPosting> getJobPostingsByTitles(List<String> titles, Pageable pageable) {
 
-        Page<JobPostingEntity> jobPostingEntityList = jobPostingRepository.findByTitleIn(titles,
+        Page<JobPostingEntity> jobPostingEntityList = jobPostingSearchRepository.findByTitles(
+            titles,
             pageable);
 
         List<JobPosting> jobPostings = jobPostingEntityList.get()
@@ -79,19 +81,7 @@ public class JobPostingService {
 
         Map<String, List<String>> filters = new HashMap<>();
 
-        filters.put("titles", jobPostingRepository.findDistinctTitles().stream()
-            .sorted()
-            .toList()
-        );
-
-        filters.put("companyNames", jobPostingRepository.findDistinctCompanyIds().stream()
-            .map(id -> companyRepository.findById(id)
-                .map(CompanyEntity::getName)
-                .orElseThrow(() -> new RuntimeException(
-                    "Not Found Company By CompanyId while getFilterOptions.")))
-            .sorted()
-            .toList()
-        );
+        filters.put("titles", Arrays.stream(Role.values()).map(Enum::name).toList());
 
         return filters;
     }
