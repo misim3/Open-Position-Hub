@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class JobPostingController {
 
-    private JobPostingService jobPostingService;
+    private final JobPostingService jobPostingService;
 
     public JobPostingController(JobPostingService jobPostingService) {
         this.jobPostingService = jobPostingService;
