@@ -89,7 +89,7 @@ public class JobPostingService {
 
         Map<String, List<String>> filters = new HashMap<>();
 
-        filters.put("titles", Arrays.stream(Role.values()).map(Enum::name).toList());
+        filters.put("roles", Arrays.stream(Role.values()).map(Enum::name).toList());
 
         return filters;
     }
