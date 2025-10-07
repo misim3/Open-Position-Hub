@@ -88,11 +88,16 @@ public class JobPostingService {
 
     private String buildRedirectUrl(String recruitmentUrl, String detailUrl) {
         try {
-            URI baseUri = new URI(recruitmentUrl);
-            String domain = baseUri.getScheme() + "://" + baseUri.getHost();
-            return domain + detailUrl;
+            URI base = new URI(recruitmentUrl);
+            if (!base.getPath().endsWith("/")) {
+                base = base.resolve(base.getPath() + "/");
+            }
+            URI detail = new URI(detailUrl);
+            return base.resolve(detail).toString();
         } catch (URISyntaxException e) {
-            throw new RuntimeException("Invalid recruitment URL: " + recruitmentUrl);
+            throw new RuntimeException(
+                "Invalid BASE URL: " + recruitmentUrl + ", DETAIL: " + detailUrl,
+                e.fillInStackTrace());
         }
     }
 }
