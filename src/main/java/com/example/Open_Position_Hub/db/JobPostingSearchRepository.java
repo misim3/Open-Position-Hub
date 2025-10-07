@@ -26,7 +26,7 @@ public class JobPostingSearchRepository {
     private static String buildWhereForTitles(List<String> titles) {
         return titles.stream()
             .filter(Objects::nonNull)
-            .map(t -> " LIKE ? ESCAPE '\\\\'")
+            .map(t -> "title" + " LIKE ? ESCAPE '\\\\'")
             .collect(Collectors.joining(" OR "));
     }
 
