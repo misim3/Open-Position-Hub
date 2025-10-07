@@ -15,7 +15,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class JobPostingSearchRepository {
 
-    private static final String TABLE = "job_posting";
+    private static final String TABLE = "job_posting_entity";
 
     private final JdbcTemplate jdbc;
 
