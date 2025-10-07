@@ -10,7 +10,7 @@ public enum Role {
     IOS(List.of("IOS", "iOS", "App", "APP", "앱", "모바일")),
     DATA(List.of("DATA", "Data", "데이터")),
     AI(List.of("AI", "ML", "머신러닝", "LLM", "Machine Learning", "딥러닝", "Deep Learning")),
-    DEVOPS(List.of("DEVOPS", "DevOps", "Devops", "devops", "데브옵스", "SRE", "INFRA", "System")),
+    DEVOPS(List.of("DEVOPS", "DevOps", "Devops", "devops", "데브옵스", "SRE", "INFRA", "Infra", "System")),
     QA(List.of("QA", "Qa", "테스트", "Test", "Quality")),
     BLOCKCHAIN(List.of("볼록체인", "BLOCKCHAIN", "BlockChain", "디파이", "DApp", "코인", "Web3", "컨트랙트", "메인넷")),
     GAME(List.of("GAME", "게임", "클라이언트", "Unity")),
