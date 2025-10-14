@@ -16,6 +16,17 @@ import org.springframework.stereotype.Repository;
 public class JobPostingSearchRepository {
 
     private static final String TABLE = "job_posting_entity";
+    private static final String NORMALIZED_TITLE_EXPR = """
+    REGEXP_REPLACE(
+      REGEXP_REPLACE(
+        title,
+        '^([[:space:]]*(\\\\[[^\\\\]]*\\\\]|\\\\x28[^\\\\x29]*\\\\x29|\\\\x7B[^\\\\x7D]*\\\\x7D|<[^>]*>))*[[:space:]]*',
+        ''
+      ),
+      '([[:space:]]*(\\\\[[^\\\\]]*\\\\]|\\\\x28[^\\\\x29]*\\\\x29|\\\\x7B[^\\\\x7D]*\\\\x7D|<[^>]*>))*[[:space:]]*$',
+      ''
+    )
+    """;
 
     private final JdbcTemplate jdbc;
 
@@ -26,7 +37,7 @@ public class JobPostingSearchRepository {
     private static String buildWhereForTitles(List<String> titles) {
         return titles.stream()
             .filter(Objects::nonNull)
-            .map(t -> "title LIKE ? ESCAPE '\\\\'")
+            .map(t -> NORMALIZED_TITLE_EXPR + " LIKE ? ESCAPE '\\\\'")
             .collect(Collectors.joining(" OR "));
     }
 
