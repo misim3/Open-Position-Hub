@@ -39,7 +39,7 @@ public class JobPostingService {
                         "Not Found Company By CompanyId while getAllJobPostings."));
                 return new JobPosting(
                     company.getName(),
-                    job.getTitle(),
+                    job.getDisplayTitle(),
                     job.getExperienceLevel(),
                     job.getEmploymentType(),
                     job.getLocation(),
@@ -73,7 +73,7 @@ public class JobPostingService {
 
                 return new JobPosting(
                     company.getName(),
-                    job.getTitle(),
+                    job.getDisplayTitle(),
                     job.getExperienceLevel(),
                     job.getEmploymentType(),
                     job.getLocation(),

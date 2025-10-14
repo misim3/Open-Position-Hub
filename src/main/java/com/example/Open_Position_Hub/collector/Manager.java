@@ -159,7 +159,7 @@ public class Manager {
             checkUrlToEntityId.put(checkUrl, j.getId());
 
             jobPostingsForCheck.add(new JobPostingDto(
-                j.getTitle(),
+                j.getDisplayTitle(),
                 j.getCategory(),
                 j.getExperienceLevel(),
                 j.getEmploymentType(),

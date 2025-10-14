@@ -5,7 +5,8 @@ import jakarta.persistence.Entity;
 @Entity
 public class JobPostingEntity extends BaseEntity {
 
-    private String title;
+    private String displayTitle;
+    private String searchTitle;
     private String category;
     private String experienceLevel;
     private String employmentType;
@@ -16,10 +17,11 @@ public class JobPostingEntity extends BaseEntity {
     protected JobPostingEntity() {
     }
 
-    public JobPostingEntity(String title, String category, String experienceLevel,
+    public JobPostingEntity(String displayTitle, String searchTitle, String category, String experienceLevel,
         String employmentType,
         String location, String detailUrl, Long companyId) {
-        this.title = title;
+        this.displayTitle = displayTitle;
+        this.searchTitle = searchTitle;
         this.category = category;
         this.experienceLevel = experienceLevel;
         this.employmentType = employmentType;
@@ -28,8 +30,12 @@ public class JobPostingEntity extends BaseEntity {
         this.companyId = companyId;
     }
 
-    public String getTitle() {
-        return title;
+    public String getDisplayTitle() {
+        return displayTitle;
+    }
+
+    public String getSearchTitle() {
+        return searchTitle;
     }
 
     public String getCategory() {
@@ -59,7 +65,8 @@ public class JobPostingEntity extends BaseEntity {
     @Override
     public String toString() {
         return "JobPostingEntity{" +
-            "title='" + title + '\'' +
+            "displayTitle='" + displayTitle + '\'' +
+            ", searchTitle='" + searchTitle + '\'' +
             ", category='" + category + '\'' +
             ", experienceLevel='" + experienceLevel + '\'' +
             ", employmentType='" + employmentType + '\'' +

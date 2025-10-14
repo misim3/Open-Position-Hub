@@ -18,13 +18,9 @@ public class JobPostingSearchRepository {
     private static final String TABLE = "job_posting_entity";
     private static final String NORMALIZED_TITLE_EXPR = """
     REGEXP_REPLACE(
-      REGEXP_REPLACE(
-        title,
+      search_title,
         '^([[:space:]]*(\\\\[[^\\\\]]*\\\\]|\\\\x28[^\\\\x29]*\\\\x29|\\\\x7B[^\\\\x7D]*\\\\x7D|<[^>]*>))*[[:space:]]*',
         ''
-      ),
-      '([[:space:]]*(\\\\[[^\\\\]]*\\\\]|\\\\x28[^\\\\x29]*\\\\x29|\\\\x7B[^\\\\x7D]*\\\\x7D|<[^>]*>))*[[:space:]]*$',
-      ''
     )
     """;
 
@@ -53,7 +49,8 @@ public class JobPostingSearchRepository {
 
     private static RowMapper<JobPostingEntity> mapper() {
         return (rs, rowNum) -> new JobPostingEntity(
-            rs.getString("title"),
+            rs.getString("displayTitle"),
+            rs.getString("displayTitle"),
             rs.getString("category"),
             rs.getString("experienceLevel"),
             rs.getString("employmentType"),
@@ -68,7 +65,7 @@ public class JobPostingSearchRepository {
         String where = buildWhereForTitles(titles);
         String orderBy = "ORDER BY created_at DESC";
         String select = """
-                SELECT title, category, experience_level AS experienceLevel,
+                SELECT display_title AS displayTitle, category, experience_level AS experienceLevel,
                        employment_type AS employmentType, location, detail_url AS detailUrl, company_id AS companyId
                 FROM %s
                 WHERE %s
@@ -89,7 +86,7 @@ public class JobPostingSearchRepository {
     public Page<JobPostingEntity> findAll(Pageable pageable) {
         String orderBy = "ORDER BY created_at DESC";
         String select = """
-                SELECT title, category, experience_level AS experienceLevel,
+                SELECT display_title AS displayTitle, category, experience_level AS experienceLevel,
                        employment_type AS employmentType, location, detail_url AS detailUrl, company_id AS companyId
                 FROM %s
                 %s
