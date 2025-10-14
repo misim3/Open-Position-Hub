@@ -4,8 +4,8 @@ import java.util.List;
 
 public enum Role {
 
-    BACKEND(List.of("백엔드", "Backend", "backend", "서버", "Server", "server", "BE", "Back-End", "Back-end")),
-    FRONTEND(List.of("프론트엔드", "FrontEnd", "FE", "Front-End", "Front-end")),
+    BACKEND(List.of("백엔드", "Backend", "backend", "서버", "Server", "server", "BE", "Back-End", "Back-end", "Full stack", "풀스택")),
+    FRONTEND(List.of("프론트엔드", "FrontEnd", "FE", "Front-End", "Front-end", "Full stack", "풀스택")),
     ANDROID(List.of("안드로이드", "Android", "AOS", "App", "APP", "앱", "모바일")),
     IOS(List.of("IOS", "iOS", "App", "APP", "앱", "모바일")),
     DATA(List.of("DATA", "Data", "데이터")),
