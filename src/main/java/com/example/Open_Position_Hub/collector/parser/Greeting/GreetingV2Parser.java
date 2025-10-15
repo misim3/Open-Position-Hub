@@ -203,7 +203,7 @@ public class GreetingV2Parser implements JobParser {
             }
 
             // 드롭다운 로드/가시성 대기
-            WebElement dropdown = wait.until(
+            wait.until(
                 ExpectedConditions.visibilityOfElementLocated(By.cssSelector("#dropdown-portal")));
 
             List<WebElement> optionElements = wait.until(
