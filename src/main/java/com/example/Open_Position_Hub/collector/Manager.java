@@ -69,6 +69,24 @@ public class Manager {
     private List<JobPostingDto> processJobScraping(CompanyEntity company) {
 
         logger.info("{} Processing job scraping...", company.getName());
+
+        if (company.getRecruitmentPlatform() == null) {
+            logger.info("{} No recruitment platform", company.getName());
+            return null;
+        }
+
+        if (company.getRecruitmentUrl() == null) {
+            logger.info("{} No recruitment URL", company.getName());
+            return null;
+        }
+
+        PlatformStrategy platformStrategy = platformRegistry.getStrategy(
+            company.getRecruitmentPlatform());
+
+        if (platformStrategy == null) {
+            return null;
+        }
+
         String url = company.getRecruitmentUrl();
 
         Document doc = fetcher.fetchHtml(url);
@@ -77,14 +95,7 @@ public class Manager {
             return null;
         }
 
-        PlatformStrategy platformStrategy = platformRegistry.getStrategy(
-            company.getRecruitmentPlatform());
-
-        if (platformStrategy != null) {
-            return platformStrategy.scrape(doc, company);
-        }
-
-        return null;
+        return platformStrategy.scrape(doc, company);
     }
 
     private void saveJobPostings(List<JobPostingDto> scrapedJobPostings) {
@@ -160,6 +171,7 @@ public class Manager {
 
             jobPostingsForCheck.add(new JobPostingDto(
                 j.getDisplayTitle(),
+                j.getSearchTitle(),
                 j.getCategory(),
                 j.getExperienceLevel(),
                 j.getEmploymentType(),

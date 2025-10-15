@@ -8,6 +8,7 @@ import com.example.Open_Position_Hub.db.JobPostingRepository;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import java.util.function.ObjDoubleConsumer;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,6 +55,14 @@ class ManagerTest {
         return new CompanyEntity("weavrcare", "그리팅", "https://weavrcare.career.greetinghr.com/ko/home");
     }
 
+    private CompanyEntity abc1() {
+        return new CompanyEntity("abc1", "플랫폼", null);
+    }
+
+    private CompanyEntity abc2() {
+        return new CompanyEntity("abc2", "그리팅", null);
+    }
+
     @Test
     void profileCheck() {
         System.out.println("▶ Active profile = " + System.getProperty("spring.profiles.active"));
@@ -89,7 +98,7 @@ class ManagerTest {
     @Test
     void test() {
 
-        companyRepository.saveAll(List.of(doeat(), doodlin(), gravityLabs(), gear2(), weavrcare()));
+        companyRepository.saveAll(List.of(doeat(), abc1(), abc2()));
 
         manager.scrape();
 
