@@ -26,7 +26,7 @@ public class JobPostingSearchRepository {
     private static String buildWhereForTitles(List<String> titles) {
         return titles.stream()
             .filter(Objects::nonNull)
-            .map(t -> "title LIKE ? ESCAPE '\\\\'")
+            .map(t -> " search_title LIKE ? ESCAPE '\\\\'")
             .collect(Collectors.joining(" OR "));
     }
 
@@ -42,7 +42,8 @@ public class JobPostingSearchRepository {
 
     private static RowMapper<JobPostingEntity> mapper() {
         return (rs, rowNum) -> new JobPostingEntity(
-            rs.getString("title"),
+            rs.getString("displayTitle"),
+            rs.getString("searchTitle"),
             rs.getString("category"),
             rs.getString("experienceLevel"),
             rs.getString("employmentType"),
@@ -57,7 +58,7 @@ public class JobPostingSearchRepository {
         String where = buildWhereForTitles(titles);
         String orderBy = "ORDER BY created_at DESC";
         String select = """
-                SELECT title, category, experience_level AS experienceLevel,
+                SELECT display_title AS displayTitle, search_title AS searchTitle, category, experience_level AS experienceLevel,
                        employment_type AS employmentType, location, detail_url AS detailUrl, company_id AS companyId
                 FROM %s
                 WHERE %s
@@ -78,7 +79,7 @@ public class JobPostingSearchRepository {
     public Page<JobPostingEntity> findAll(Pageable pageable) {
         String orderBy = "ORDER BY created_at DESC";
         String select = """
-                SELECT title, category, experience_level AS experienceLevel,
+                SELECT display_title AS displayTitle, search_title AS searchTitle, category, experience_level AS experienceLevel,
                        employment_type AS employmentType, location, detail_url AS detailUrl, company_id AS companyId
                 FROM %s
                 %s

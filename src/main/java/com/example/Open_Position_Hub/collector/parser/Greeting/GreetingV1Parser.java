@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
@@ -19,6 +20,9 @@ public class GreetingV1Parser implements JobParser {
 
     private static final String key = "그리팅/V1";
     private static final Logger logger = LoggerFactory.getLogger(GreetingV1Parser.class);
+    private static final Pattern PREFIX_BRACKET_BLOCKS =
+        Pattern.compile("^(?:\\s*(?:\\[[^]]*]|\\([^)]*\\)|\\{[^}]*}|<[^>]*>))+\\s*");
+
 
     @Override
     public String layoutKey() {
@@ -85,7 +89,10 @@ public class GreetingV1Parser implements JobParser {
 
         for (Element link : links) {
             String href = link.attr("href");
-            String title = link.select("span.sc-86b147bc-0.gIOkaZ.sc-f484a550-1.gMeHeg").text();
+            String displayTitle = link.select("span.sc-86b147bc-0.gIOkaZ.sc-f484a550-1.gMeHeg")
+                .text();
+            String searchTitle = PREFIX_BRACKET_BLOCKS.matcher(displayTitle).replaceFirst("");
+
             Elements details = link.select("span.sc-86b147bc-0.bugutw.sc-708ae078-1.gAEjfw");
 
             String category = "";
@@ -115,7 +122,8 @@ public class GreetingV1Parser implements JobParser {
             }
 
             jobPostings.add(
-                new JobPostingDto(title, category, experienceLevel, employmentType, location, href,
+                new JobPostingDto(displayTitle, searchTitle, category, experienceLevel,
+                    employmentType, location, href,
                     companyId));
         }
 
