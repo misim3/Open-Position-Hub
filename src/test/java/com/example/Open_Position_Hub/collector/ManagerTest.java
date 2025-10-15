@@ -8,7 +8,6 @@ import com.example.Open_Position_Hub.db.JobPostingRepository;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
-import java.util.function.ObjDoubleConsumer;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,27 +23,29 @@ import org.springframework.test.context.ActiveProfiles;
 class ManagerTest {
 
     @Autowired
+    ApplicationContext context;
+    @Autowired
     private JobPostingRepository jobPostingRepository;
-
     @Autowired
     private CompanyRepository companyRepository;
-
     @Autowired
     private Manager manager;
-
     @Autowired
     private Environment env;
 
     private CompanyEntity doeat() {
-        return new CompanyEntity("doeat", "그리팅", "https://teamdoeat.career.greetinghr.com/ko/jobposting#323ea93b-ce52-45c9-bbbf-0b85ad135508");
+        return new CompanyEntity("doeat", "그리팅",
+            "https://teamdoeat.career.greetinghr.com/ko/jobposting#323ea93b-ce52-45c9-bbbf-0b85ad135508");
     }
 
     private CompanyEntity doodlin() {
-        return new CompanyEntity("doodlin", "그리팅", "https://www.doodlin.co.kr/ko/career#3276397a-a988-4ca5-ab47-9aa05e9cce30");
+        return new CompanyEntity("doodlin", "그리팅",
+            "https://www.doodlin.co.kr/ko/career#3276397a-a988-4ca5-ab47-9aa05e9cce30");
     }
 
     private CompanyEntity gravityLabs() {
-        return new CompanyEntity("gravityLabs", "그리팅", "https://gravitylabs.career.greetinghr.com/ko/home#1df7f045-8c3f-48eb-a9f6-a3bd28a1e0e2");
+        return new CompanyEntity("gravityLabs", "그리팅",
+            "https://gravitylabs.career.greetinghr.com/ko/home#1df7f045-8c3f-48eb-a9f6-a3bd28a1e0e2");
     }
 
     private CompanyEntity gear2() {
@@ -52,7 +53,8 @@ class ManagerTest {
     }
 
     private CompanyEntity weavrcare() {
-        return new CompanyEntity("weavrcare", "그리팅", "https://weavrcare.career.greetinghr.com/ko/home");
+        return new CompanyEntity("weavrcare", "그리팅",
+            "https://weavrcare.career.greetinghr.com/ko/home");
     }
 
     private CompanyEntity abc1() {
@@ -72,13 +74,12 @@ class ManagerTest {
     void printDataSourceUrl() {
         System.out.println("🔍 spring.datasource.url = " + env.getProperty("spring.datasource.url"));
     }
-    @Autowired
-    ApplicationContext context;
 
     @Test
     void scheduling_should_be_disabled_in_test_profile() {
         // 1) 스케줄러 등록 현황 수집
-        Collection<ScheduledTaskHolder> holders = context.getBeansOfType(ScheduledTaskHolder.class).values();
+        Collection<ScheduledTaskHolder> holders = context.getBeansOfType(ScheduledTaskHolder.class)
+            .values();
         Set<ScheduledTask> tasks = holders.stream()
             .flatMap(h -> h.getScheduledTasks().stream())
             .collect(Collectors.toSet());
