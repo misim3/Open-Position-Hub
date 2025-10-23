@@ -1,4 +1,4 @@
-package com.example.Open_Position_Hub.collector.parser.Greeting;
+package com.example.Open_Position_Hub.collector.parser.greeting;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
