@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
+import com.example.Open_Position_Hub.collector.detect.greeting.GreetingV1Detector;
+import com.example.Open_Position_Hub.collector.detect.greeting.GreetingV2Detector;
 import java.util.List;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;

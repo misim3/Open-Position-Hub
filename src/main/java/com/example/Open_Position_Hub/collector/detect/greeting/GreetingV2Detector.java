@@ -1,11 +1,12 @@
-package com.example.Open_Position_Hub.collector.detect;
+package com.example.Open_Position_Hub.collector.detect.greeting;
 
+import com.example.Open_Position_Hub.collector.detect.LayoutDetector;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.springframework.stereotype.Component;
 
 @Component
-public class GreetingV1Detector implements LayoutDetector {
+public class GreetingV2Detector implements LayoutDetector {
 
     private static final String key = "그리팅";
 
@@ -16,14 +17,14 @@ public class GreetingV1Detector implements LayoutDetector {
 
     @Override
     public int order() {
-        return 0;
+        return 1;
     }
 
     @Override
     public String detect(Document doc) {
-        Element listViewB = doc.selectFirst("div[listviewtype='b']");
-        if (listViewB != null) {
-            return platformKey() + "/V1";
+        Element listViewA = doc.selectFirst("div[listviewtype='a']");
+        if (listViewA != null) {
+            return platformKey() + "/V2";
         }
         return null;
     }
