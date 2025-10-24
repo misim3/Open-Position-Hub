@@ -22,7 +22,7 @@ public class NinehireV2Detector implements LayoutDetector {
 
     @Override
     public String detect(Document doc) {
-        Element container = doc.selectFirst("div[id='homepage-layout-baad52be-0a6b-6391-bb46-042bc8f4bc57']");
+        Element container = doc.selectFirst("div[class='JobPostingsDropdownTypeLayout__Layout-sc-3e4dd5d0-0.dTVKzy']");
         if (container != null) {
             return platformKey() + "/V1";
         }
