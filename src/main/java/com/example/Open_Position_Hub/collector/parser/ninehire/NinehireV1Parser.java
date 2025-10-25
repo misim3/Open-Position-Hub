@@ -3,6 +3,7 @@ package com.example.Open_Position_Hub.collector.parser.ninehire;
 import com.example.Open_Position_Hub.collector.JobPostingDto;
 import com.example.Open_Position_Hub.collector.parser.JobParser;
 import com.example.Open_Position_Hub.db.CompanyEntity;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -11,6 +12,10 @@ import java.util.regex.Pattern;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -41,7 +46,7 @@ public class NinehireV1Parser implements JobParser {
             return null;
         }
 
-        Element container = doc.selectFirst("div.JobPostingsSidebarTypeLayoutBody__Content-sc-c28e05fb-1.eSfHWV");
+        Element container = doc.selectFirst("div.JobPostingsSidebarTypeLayoutBody__Layout-sc-c28e05fb-0.gFjOAV");
         if (container == null) {
             logger.error("Element not found in NinehireV1Parser.parse.container for Company: {}",
                 company.getName());
@@ -79,5 +84,98 @@ public class NinehireV1Parser implements JobParser {
 
     private List<JobPostingDto> handleJobCards(Element container, Map<String, List<String>> options, Long companyId) {
 
+        List<JobPostingDto> jobPostings = new ArrayList<>();
+
+        Map<String, Field> textToField = buildTextToField(options);
+
+        Elements cards = container.select("div.JobPostingsJobPosting__Layout-sc-6ae888f2-0.ffnSOB");
+
+        // Chrome 옵션 설정
+        ChromeOptions chromeOptions = new ChromeOptions();
+        chromeOptions.addArguments("--headless");  // 헤드리스 모드 (UI 없이 실행)
+        chromeOptions.addArguments("--disable-gpu");
+        chromeOptions.addArguments("--no-sandbox");
+        chromeOptions.addArguments("--disable-dev-shm-usage");
+        chromeOptions.addArguments("--window-size=1920,1080");
+
+        WebDriver driver = new ChromeDriver(chromeOptions);
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(5));
+
+
+        /* 페이지 동적 처리
+        Element pagination = container.selectFirst("div.JobPostingsPagination__StyleWrapper-sc-2cfa53e4-0.jQRYFm");
+
+        if (pagination != null) {
+
+        }
+
+         */
+
+        for (Element card : cards) {
+            String detailUrl = getDetailUrl(driver, wait, card);
+            String displayTitle = card.select("h1.Heading-sc-7076dd01-0.JobPostingsJobPosting__Title-sc-6ae888f2-6.iBwyHC.gtFbzH")
+                .text();
+            String searchTitle = PREFIX_BRACKET_BLOCKS.matcher(displayTitle).replaceFirst("");
+
+            Elements details = card.select("span.Body-sc-b30a2c4-0.JobPostingsJobPosting__Tag-sc-6ae888f2-8 kHpiRr.flPAJD");
+
+            String category = "";
+            String experienceLevel = "";
+            String employmentType = "";
+            String location = "";
+
+            for (Element detail : details) {
+                String text = detail.text();
+
+                Field f = textToField.get(text);
+                if (f != null) {
+                    switch (f) {
+                        case CATEGORY -> category = text;
+                        case EXPERIENCE -> experienceLevel = text;
+                        case EMPLOYMENT -> employmentType = text;
+                        case LOCATION -> location = text;
+                    }
+                } else if (experienceLevel.isEmpty() && text.contains("경력")) {
+                    experienceLevel = text;
+                }
+
+                if (!category.isEmpty() && !experienceLevel.isEmpty()
+                    && !employmentType.isEmpty() && !location.isEmpty()) {
+                    break;
+                }
+            }
+
+            jobPostings.add(
+                new JobPostingDto(displayTitle, searchTitle, category, experienceLevel,
+                    employmentType, location, null,
+                    companyId));
+        }
+
+        return jobPostings;
     }
+
+    private String getDetailUrl(WebDriver driver, WebDriverWait wait, Element card) {
+        return "detailUrl";
+    }
+
+    private Map<String, Field> buildTextToField(Map<String, List<String>> options) {
+        Map<String, Field> map = new HashMap<>();
+        options.forEach((k, values) -> {
+            Field f = switch (k) {
+                case "직군" -> Field.CATEGORY;
+                case "경력사항" -> Field.EXPERIENCE;
+                case "고용형태" -> Field.EMPLOYMENT;
+                case "근무지" -> Field.LOCATION;
+                default -> null;
+            };
+            if (f != null) {
+                for (String v : values) {
+                    map.put(v, f); // 필요하면 .trim()·소문자 변환 등 정규화 추가
+                }
+            }
+        });
+        return map;
+    }
+
+    private enum Field {CATEGORY, EXPERIENCE, EMPLOYMENT, LOCATION}
 }
