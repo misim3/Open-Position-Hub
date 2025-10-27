@@ -13,7 +13,6 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -106,16 +105,16 @@ public class Manager {
 
         List<JobPostingDto> existing = jobPostingRepository.findByCompanyId(companyId)
             .stream()
-                .map(j -> new JobPostingDto(
-                    j.getDisplayTitle(),
-                    j.getSearchTitle(),
-                    j.getCategory(),
-                    j.getExperienceLevel(),
-                    j.getEmploymentType(),
-                    j.getLocation(),
-                    j.getDetailUrl(),
-                    j.getCompanyId()
-                ))
+            .map(j -> new JobPostingDto(
+                j.getDisplayTitle(),
+                j.getSearchTitle(),
+                j.getCategory(),
+                j.getExperienceLevel(),
+                j.getEmploymentType(),
+                j.getLocation(),
+                j.getDetailUrl(),
+                j.getCompanyId()
+            ))
             .toList();
 
         List<JobPostingEntity> toInsert = jobPostings.stream()
