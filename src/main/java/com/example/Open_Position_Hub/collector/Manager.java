@@ -99,11 +99,13 @@ public class Manager {
 
     private void saveJobPostings(List<JobPostingDto> scrapedJobPostings) {
 
-        List<JobPostingDto> jobPostings = new HashSet<>(scrapedJobPostings).stream().toList();
+        List<JobPostingDto> scraped = new HashSet<>(scrapedJobPostings).stream().toList();
 
-        Long companyId = jobPostings.get(0).companyId();
+        Long companyId = scraped.get(0).companyId();
 
-        List<JobPostingDto> existing = jobPostingRepository.findByCompanyId(companyId)
+        List<JobPostingEntity> jobPostings = jobPostingRepository.findByCompanyId(companyId);
+
+        List<JobPostingDto> existing = jobPostings
             .stream()
             .map(j -> new JobPostingDto(
                 j.getDisplayTitle(),
@@ -117,17 +119,21 @@ public class Manager {
             ))
             .toList();
 
-        List<JobPostingEntity> toInsert = jobPostings.stream()
-            .filter(j -> !existing.contains(j))
+        List<JobPostingEntity> toInsert = scraped.stream()
             .map(JobPostingDto::toEntity)
+            .filter(s -> !jobPostings.contains(s))
             .toList();
 
-        List<JobPostingEntity> toDelete = existing.stream()
-            .filter(j -> !jobPostings.contains(j))
-            .map(JobPostingDto::toEntity)
+        Set<String> toDeleteUrls = existing.stream()
+            .filter(e -> !scraped.contains(e))
+            .map(JobPostingDto::detailUrl)
+            .collect(Collectors.toSet());
+
+        List<JobPostingEntity> toDelete = jobPostings.stream()
+            .filter(j -> toDeleteUrls.contains(j.getDetailUrl()))
             .toList();
 
-        if (!scrapedJobPostings.isEmpty()) {
+        if (!toInsert.isEmpty()) {
             jobPostingRepository.saveAll(toInsert);
             logger.info("Inserted {} new job postings.", toInsert.size());
         } else {
