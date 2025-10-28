@@ -120,8 +120,8 @@ public class Manager {
             .toList();
 
         List<JobPostingEntity> toInsert = scraped.stream()
+            .filter(s -> !existing.contains(s))
             .map(JobPostingDto::toEntity)
-            .filter(s -> !jobPostings.contains(s))
             .toList();
 
         Set<String> toDeleteUrls = existing.stream()
