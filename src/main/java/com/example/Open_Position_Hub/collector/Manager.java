@@ -13,7 +13,6 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -100,31 +99,41 @@ public class Manager {
 
     private void saveJobPostings(List<JobPostingDto> scrapedJobPostings) {
 
-        List<JobPostingDto> jobPostings = new HashSet<>(scrapedJobPostings).stream().toList();
+        List<JobPostingDto> scraped = new HashSet<>(scrapedJobPostings).stream().toList();
 
-        Long companyId = jobPostings.get(0).companyId();
+        Long companyId = scraped.get(0).companyId();
 
-        List<JobPostingEntity> existing = jobPostingRepository.findByCompanyId(companyId);
-        Set<String> existingUrls = existing.stream()
-            .map(JobPostingEntity::getDetailUrl)
+        List<JobPostingEntity> jobPostings = jobPostingRepository.findByCompanyId(companyId);
+
+        List<JobPostingDto> existing = jobPostings
+            .stream()
+            .map(j -> new JobPostingDto(
+                j.getDisplayTitle(),
+                j.getSearchTitle(),
+                j.getCategory(),
+                j.getExperienceLevel(),
+                j.getEmploymentType(),
+                j.getLocation(),
+                j.getDetailUrl(),
+                j.getCompanyId()
+            ))
+            .toList();
+
+        List<JobPostingEntity> toInsert = scraped.stream()
+            .map(JobPostingDto::toEntity)
+            .filter(s -> !jobPostings.contains(s))
+            .toList();
+
+        Set<String> toDeleteUrls = existing.stream()
+            .filter(e -> !scraped.contains(e))
+            .map(JobPostingDto::detailUrl)
             .collect(Collectors.toSet());
 
-        Map<String, JobPostingEntity> scrapedByUrl = new LinkedHashMap<>();
-        for (JobPostingDto s : scrapedJobPostings) {
-            scrapedByUrl.putIfAbsent(s.detailUrl(), s.toEntity());
-        }
-        Set<String> scrapedUrls = scrapedByUrl.keySet();
-
-        List<JobPostingEntity> toInsert = scrapedByUrl.entrySet().stream()
-            .filter(e -> !existingUrls.contains(e.getKey()))
-            .map(Map.Entry::getValue)
+        List<JobPostingEntity> toDelete = jobPostings.stream()
+            .filter(j -> toDeleteUrls.contains(j.getDetailUrl()))
             .toList();
 
-        List<JobPostingEntity> toDelete = existing.stream()
-            .filter(e -> !scrapedUrls.contains(e.getDetailUrl()))
-            .toList();
-
-        if (!scrapedJobPostings.isEmpty()) {
+        if (!toInsert.isEmpty()) {
             jobPostingRepository.saveAll(toInsert);
             logger.info("Inserted {} new job postings.", toInsert.size());
         } else {
