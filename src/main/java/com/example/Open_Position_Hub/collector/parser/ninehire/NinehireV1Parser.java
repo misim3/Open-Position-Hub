@@ -12,9 +12,12 @@ import java.util.regex.Pattern;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,14 +49,16 @@ public class NinehireV1Parser implements JobParser {
             return null;
         }
 
-        Element container = doc.selectFirst("div.JobPostingsSidebarTypeLayoutBody__Layout-sc-c28e05fb-0.gFjOAV");
+        Element container = doc.selectFirst(
+            "div.JobPostingsSidebarTypeLayoutBody__Layout-sc-c28e05fb-0.gFjOAV");
         if (container == null) {
             logger.error("Element not found in NinehireV1Parser.parse.container for Company: {}",
                 company.getName());
             return null;
         }
 
-        List<JobPostingDto> jobPostings = handleJobCards(container, options, company.getId());
+        List<JobPostingDto> jobPostings = handleJobCards(container, options, company.getId(),
+            company.getRecruitmentUrl());
         if (jobPostings.isEmpty()) {
             logger.error(
                 "HTML structure Error: Unable to find elements in NinehireV1Parser.handleJobCards for Company: {}, URL: {}",
@@ -68,13 +73,18 @@ public class NinehireV1Parser implements JobParser {
         Map<String, List<String>> options = new HashMap<>();
 
         for (Element category : categories) {
-            String name = category.select("span.Body-sc-b30a2c4-0.JobPostingsSidebarFilter__Title-sc-6112d8f1-4.kOYzOz").text();
+            String name = category.select(
+                    "span.Body-sc-b30a2c4-0.JobPostingsSidebarFilter__Title-sc-6112d8f1-4.kOYzOz")
+                .text();
 
-            Elements checks = category.select("div.JobPostingsSidebarFilter__FilterRadioLayout-sc-6112d8f1-8.emJXFB");
+            Elements checks = category.select(
+                "div.JobPostingsSidebarFilter__FilterRadioLayout-sc-6112d8f1-8.emJXFB");
 
             List<String> values = new ArrayList<>();
             for (Element check : checks) {
-                values.add(check.select("span.Body-sc-b30a2c4-0.JobPostingsSidebarFilter__FilterRadioTitle-sc-6112d8f1-13.kHpiRr.deIPOu").text());
+                values.add(check.select(
+                        "span.Body-sc-b30a2c4-0.JobPostingsSidebarFilter__FilterRadioTitle-sc-6112d8f1-13.kHpiRr.deIPOu")
+                    .text());
             }
             options.put(name, values);
         }
@@ -82,13 +92,12 @@ public class NinehireV1Parser implements JobParser {
         return options;
     }
 
-    private List<JobPostingDto> handleJobCards(Element container, Map<String, List<String>> options, Long companyId) {
+    private List<JobPostingDto> handleJobCards(Element container, Map<String, List<String>> options,
+        Long companyId, String url) {
 
         List<JobPostingDto> jobPostings = new ArrayList<>();
 
         Map<String, Field> textToField = buildTextToField(options);
-
-        Elements cards = container.select("div.JobPostingsJobPosting__Layout-sc-6ae888f2-0.ffnSOB");
 
         // Chrome 옵션 설정
         ChromeOptions chromeOptions = new ChromeOptions();
@@ -101,54 +110,89 @@ public class NinehireV1Parser implements JobParser {
         WebDriver driver = new ChromeDriver(chromeOptions);
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(5));
 
+        try {
+            driver.get(url);
 
-        /* 페이지 동적 처리
-        Element pagination = container.selectFirst("div.JobPostingsPagination__StyleWrapper-sc-2cfa53e4-0.jQRYFm");
+            wait.until(ExpectedConditions.presenceOfElementLocated(
+                By.cssSelector("div.JobPostingsJobPosting__Layout-sc-6ae888f2-0.ffnSOB")));
 
-        if (pagination != null) {
+            while (true) {
+                Elements cards = container.select(
+                    "div.JobPostingsJobPosting__Layout-sc-6ae888f2-0.ffnSOB");
 
-        }
+                for (Element card : cards) {
+                    String detailUrl = getDetailUrl(driver, wait, card);
+                    String displayTitle = card.select(
+                            "h1.Heading-sc-7076dd01-0.JobPostingsJobPosting__Title-sc-6ae888f2-6.iBwyHC.gtFbzH")
+                        .text();
+                    String searchTitle = PREFIX_BRACKET_BLOCKS.matcher(displayTitle)
+                        .replaceFirst("");
 
-         */
+                    Elements details = card.select(
+                        "span.Body-sc-b30a2c4-0.JobPostingsJobPosting__Tag-sc-6ae888f2-8 kHpiRr.flPAJD");
 
-        for (Element card : cards) {
-            String detailUrl = getDetailUrl(driver, wait, card);
-            String displayTitle = card.select("h1.Heading-sc-7076dd01-0.JobPostingsJobPosting__Title-sc-6ae888f2-6.iBwyHC.gtFbzH")
-                .text();
-            String searchTitle = PREFIX_BRACKET_BLOCKS.matcher(displayTitle).replaceFirst("");
+                    String category = "";
+                    String experienceLevel = "";
+                    String employmentType = "";
+                    String location = "";
 
-            Elements details = card.select("span.Body-sc-b30a2c4-0.JobPostingsJobPosting__Tag-sc-6ae888f2-8 kHpiRr.flPAJD");
+                    for (Element detail : details) {
+                        String text = detail.text();
 
-            String category = "";
-            String experienceLevel = "";
-            String employmentType = "";
-            String location = "";
+                        Field f = textToField.get(text);
+                        if (f != null) {
+                            switch (f) {
+                                case CATEGORY -> category = text;
+                                case EXPERIENCE -> experienceLevel = text;
+                                case EMPLOYMENT -> employmentType = text;
+                                case LOCATION -> location = text;
+                            }
+                        } else if (experienceLevel.isEmpty() && text.contains("경력")) {
+                            experienceLevel = text;
+                        }
 
-            for (Element detail : details) {
-                String text = detail.text();
-
-                Field f = textToField.get(text);
-                if (f != null) {
-                    switch (f) {
-                        case CATEGORY -> category = text;
-                        case EXPERIENCE -> experienceLevel = text;
-                        case EMPLOYMENT -> employmentType = text;
-                        case LOCATION -> location = text;
+                        if (!category.isEmpty() && !experienceLevel.isEmpty()
+                            && !employmentType.isEmpty() && !location.isEmpty()) {
+                            break;
+                        }
                     }
-                } else if (experienceLevel.isEmpty() && text.contains("경력")) {
-                    experienceLevel = text;
+
+                    jobPostings.add(
+                        new JobPostingDto(displayTitle, searchTitle, category, experienceLevel,
+                            employmentType, location, null,
+                            companyId));
                 }
 
-                if (!category.isEmpty() && !experienceLevel.isEmpty()
-                    && !employmentType.isEmpty() && !location.isEmpty()) {
+                WebElement next = driver.findElement(By.cssSelector(
+                    "div.JobPostingsPagination__StyleWrapper-sc-2cfa53e4-0.jQRYFm li.ant-pagination-next"));
+
+                if (next.getAttribute("aria-disabled").equals("true")) {
                     break;
                 }
+
+                String prev = driver.findElement(By.cssSelector("li.ant-pagination-item-active"))
+                    .getText().trim();
+
+                driver.findElement(
+                        By.cssSelector("li.ant-pagination-next button.ant-pagination-item-link"))
+                    .click();
+
+                wait.until(d -> {
+                    try {
+                        String now = d.findElement(By.cssSelector("li.ant-pagination-item-active"))
+                            .getText().trim();
+                        return !now.equals(prev);
+                    } catch (Exception e) {
+                        return false;
+                    }
+                });
+
             }
 
-            jobPostings.add(
-                new JobPostingDto(displayTitle, searchTitle, category, experienceLevel,
-                    employmentType, location, null,
-                    companyId));
+        } catch (Exception e) {
+            logger.error("Fail to handleJobCards in NinehireV1Parser: {}", e.getMessage());
+        } finally {
+            driver.quit();
         }
 
         return jobPostings;
