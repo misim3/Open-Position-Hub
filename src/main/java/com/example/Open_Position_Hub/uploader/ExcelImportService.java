@@ -2,7 +2,9 @@ package com.example.Open_Position_Hub.uploader;
 
 import com.example.Open_Position_Hub.db.CompanyEntity;
 import com.example.Open_Position_Hub.db.CompanyRepository;
+import com.example.Open_Position_Hub.db.JobPostingRepository;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,18 +16,26 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class ExcelImportService {
 
+    private static final Logger log = LoggerFactory.getLogger(ExcelImportService.class);
     private final CompanyRepository companyRepository;
+    private final JobPostingRepository jobPostingRepository;
 
-    public ExcelImportService(CompanyRepository companyRepository) {
+    public ExcelImportService(CompanyRepository companyRepository,
+        JobPostingRepository jobPostingRepository) {
         this.companyRepository = companyRepository;
+        this.jobPostingRepository = jobPostingRepository;
     }
 
+    @Transactional
     public void importFromExcel(MultipartFile file) {
         try (InputStream is = file.getInputStream();
             Workbook workbook = new XSSFWorkbook(is)) {
@@ -38,6 +48,9 @@ public class ExcelImportService {
             for (CompanyEntity entity : existingCompanies) {
                 existingMap.put(entity.getName(), entity);
             }
+
+            List<CompanyEntity> toInsert = new ArrayList<>();
+            List<Long> toDeleteJobPostingEntityByCompanyId = new ArrayList<>();
 
             for (int i = 1; i <= sheet.getLastRowNum(); i++) {
                 Row row = sheet.getRow(i);
@@ -76,9 +89,10 @@ public class ExcelImportService {
 
                 if (existing == null) {
                     // 신규 → 저장
-                    companyRepository.save(new CompanyEntity(cleanName, platform, url));
+                    toInsert.add(new CompanyEntity(cleanName, platform, url));
+
                 } else {
-                    // 기존 → 변경된 경우만 업데이트
+                    // 기존 → 변경된 경우만 업데이트 및 저장된 공고 삭제
                     boolean isModified =
                         !Objects.equals(existing.getRecruitmentPlatform(), platform) ||
                             !Objects.equals(existing.getRecruitmentUrl(), url);
@@ -86,12 +100,17 @@ public class ExcelImportService {
                     if (isModified) {
                         existing.setRecruitmentPlatform(platform);
                         existing.setRecruitmentUrl(url);
-                        companyRepository.save(existing);
+                        toInsert.add(existing);
+                        toDeleteJobPostingEntityByCompanyId.add(existing.getId());
                     }
                 }
             }
 
+            companyRepository.saveAll(toInsert);
+            jobPostingRepository.deleteByCompanyIdIn(toDeleteJobPostingEntityByCompanyId);
+
         } catch (Exception e) {
+            log.error(e.toString());
             throw new RuntimeException("엑셀 처리 중 오류 발생", e);
         }
     }
