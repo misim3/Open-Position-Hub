@@ -54,7 +54,7 @@ public class Manager {
     public void scrape() {
         System.out.println("Start scraping...");
 //        List<CompanyEntity> companies = companyRepository.findAll();
-        List<CompanyEntity> companies = companyRepository.findAllByRecruitmentPlatform("그리팅");
+        List<CompanyEntity> companies = companyRepository.findAllByRecruitmentPlatform("나인하이어");
         for (CompanyEntity company : companies) {
             List<JobPostingDto> jobPostings = processJobScraping(company);
             if (jobPostings == null || jobPostings.isEmpty()) {

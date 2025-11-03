@@ -65,6 +65,10 @@ class ManagerTest {
         return new CompanyEntity("abc2", "그리팅", null);
     }
 
+    private CompanyEntity yogiyo() {
+        return new CompanyEntity("yogiyo", "나인하이어", "https://wesangcareer.ninehire.site/");
+    }
+
     @Test
     void profileCheck() {
         System.out.println("▶ Active profile = " + System.getProperty("spring.profiles.active"));
@@ -99,11 +103,11 @@ class ManagerTest {
     @Test
     void test() {
 
-        companyRepository.saveAll(List.of(doeat(), abc1(), abc2()));
+        companyRepository.save(yogiyo());
 
         manager.scrape();
 
-        manager.check();
+//        manager.check();
 
         jobPostingRepository.findAll().forEach(System.out::println);
 
