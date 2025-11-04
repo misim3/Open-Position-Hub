@@ -2,6 +2,7 @@ package com.example.Open_Position_Hub.collector.platform;
 
 import com.example.Open_Position_Hub.collector.JobPostingDto;
 import com.example.Open_Position_Hub.collector.detect.DefaultDetectorRegistry;
+import com.example.Open_Position_Hub.collector.detect.DetectorDto;
 import com.example.Open_Position_Hub.collector.parser.JobParser;
 import com.example.Open_Position_Hub.collector.parser.ParserRegistry;
 import com.example.Open_Position_Hub.db.CompanyEntity;
@@ -33,7 +34,7 @@ public class GreetingStrategy implements PlatformStrategy {
     @Override
     public List<JobPostingDto> scrape(Document doc, CompanyEntity company) {
 
-        String layoutKey = defaultDetectorRegistry.detect(platformKey(), doc);
+        String layoutKey = defaultDetectorRegistry.detect(platformKey(), new DetectorDto(doc, company.getRecruitmentUrl()));
 
         if (layoutKey == null) {
             logger.warn("Not matched proper detector for company : {} ", company.getName());

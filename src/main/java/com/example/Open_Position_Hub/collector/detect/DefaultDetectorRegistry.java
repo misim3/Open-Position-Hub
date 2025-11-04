@@ -5,7 +5,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import org.jsoup.nodes.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -28,7 +27,7 @@ public class DefaultDetectorRegistry implements DetectorRegistry {
     }
 
     @Override
-    public String detect(String platformKey, Document doc) {
+    public String detect(String platformKey, DetectorDto dto) {
         List<LayoutDetector> candidates = byPlatform.getOrDefault(platformKey, List.of());
 
         if (candidates.isEmpty()) {
@@ -37,7 +36,7 @@ public class DefaultDetectorRegistry implements DetectorRegistry {
         }
 
         for (LayoutDetector d : candidates) {
-            String res = d.detect(doc);
+            String res = d.detect(dto);
             if (res != null) {
                 return res;
             }
