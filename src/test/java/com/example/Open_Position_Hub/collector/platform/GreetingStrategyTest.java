@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 
 import com.example.Open_Position_Hub.collector.JobPostingDto;
 import com.example.Open_Position_Hub.collector.detect.DefaultDetectorRegistry;
+import com.example.Open_Position_Hub.collector.detect.DetectorDto;
 import com.example.Open_Position_Hub.collector.parser.ParserRegistry;
 import com.example.Open_Position_Hub.db.CompanyEntity;
 import java.util.List;
@@ -52,7 +53,7 @@ class GreetingStrategyTest {
         Document doc = mock(Document.class);
         CompanyEntity company = mock(CompanyEntity.class);
 
-        when(detector.detect(strategy.platformKey(), doc)).thenReturn(null);
+        when(detector.detect(strategy.platformKey(), new DetectorDto(doc, null))).thenReturn(null);
 
         List<JobPostingDto> result = strategy.scrape(doc, company);
         assertNull(result);

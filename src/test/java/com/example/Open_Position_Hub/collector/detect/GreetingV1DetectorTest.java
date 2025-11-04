@@ -25,7 +25,7 @@ class GreetingV1DetectorTest {
     void detect_hitsWhenListViewTypeB() {
         GreetingV1Detector d = new GreetingV1Detector();
         Document doc = Jsoup.parse("<div listviewtype='b'></div>");
-        String hit = d.detect(doc);
+        String hit = d.detect(new DetectorDto(doc, null));
         assertNotNull(hit);
         assertEquals("그리팅/V1", hit);
     }
@@ -35,6 +35,6 @@ class GreetingV1DetectorTest {
     void detect_returnNullWhenNoMatch() {
         GreetingV1Detector d = new GreetingV1Detector();
         Document doc = Jsoup.parse("<div listviewtype='a'></div>");
-        assertNull(d.detect(doc));
+        assertNull(d.detect(new DetectorDto(doc, null)));
     }
 }
