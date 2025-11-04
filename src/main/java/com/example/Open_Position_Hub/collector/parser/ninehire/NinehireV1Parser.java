@@ -10,8 +10,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -39,69 +37,9 @@ public class NinehireV1Parser implements JobParser {
     @Override
     public List<JobPostingDto> parse(Document doc, CompanyEntity company) {
 
-        Map<String, List<String>> options = handleSideBar(
-            doc.select("div.JobPostingsSidebarFilters__FiltersLayout-sc-2062e5e7-0.hMKvYs")
-                .select("div.JobPostingsSidebarFilter__Layout-sc-6112d8f1-0.khLaJL"));
-        if (options.isEmpty()) {
-            logger.error(
-                "HTML structure Error: Unable to find elements in NinehireV1Parser.handleSideBar for Company: {}, URL: {}",
-                company.getName(), company.getRecruitmentUrl());
-            return null;
-        }
-
-        Element container = doc.selectFirst(
-            "div.JobPostingsSidebarTypeLayoutBody__Layout-sc-c28e05fb-0.gFjOAV");
-        if (container == null) {
-            logger.error("Element not found in NinehireV1Parser.parse.container for Company: {}",
-                company.getName());
-            return null;
-        }
-
-        List<JobPostingDto> jobPostings = handleJobCards(container, options, company.getId(),
-            company.getRecruitmentUrl());
-        if (jobPostings.isEmpty()) {
-            logger.error(
-                "HTML structure Error: Unable to find elements in NinehireV1Parser.handleJobCards for Company: {}, URL: {}",
-                company.getName(), company.getRecruitmentUrl());
-            return null;
-        }
-        return jobPostings;
-    }
-
-    private Map<String, List<String>> handleSideBar(Elements categories) {
-
-        Map<String, List<String>> options = new HashMap<>();
-
-        for (Element category : categories) {
-            String name = category.select(
-                    "span.Body-sc-b30a2c4-0.JobPostingsSidebarFilter__Title-sc-6112d8f1-4.kOYzOz")
-                .text();
-
-            Elements checks = category.select(
-                "div.JobPostingsSidebarFilter__FilterRadioLayout-sc-6112d8f1-8.emJXFB");
-
-            List<String> values = new ArrayList<>();
-            for (Element check : checks) {
-                values.add(check.select(
-                        "span.Body-sc-b30a2c4-0.JobPostingsSidebarFilter__FilterRadioTitle-sc-6112d8f1-13.kHpiRr.deIPOu")
-                    .text());
-            }
-            options.put(name, values);
-        }
-
-        return options;
-    }
-
-    private List<JobPostingDto> handleJobCards(Element container, Map<String, List<String>> options,
-        Long companyId, String url) {
-
-        List<JobPostingDto> jobPostings = new ArrayList<>();
-
-        Map<String, Field> textToField = buildTextToField(options);
-
         // Chrome 옵션 설정
         ChromeOptions chromeOptions = new ChromeOptions();
-        chromeOptions.addArguments("--headless");  // 헤드리스 모드 (UI 없이 실행)
+//        chromeOptions.addArguments("--headless");  // 헤드리스 모드 (UI 없이 실행)
         chromeOptions.addArguments("--disable-gpu");
         chromeOptions.addArguments("--no-sandbox");
         chromeOptions.addArguments("--disable-dev-shm-usage");
@@ -111,94 +49,154 @@ public class NinehireV1Parser implements JobParser {
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(5));
 
         try {
-            driver.get(url);
+            driver.get(company.getRecruitmentUrl());
 
-            wait.until(ExpectedConditions.presenceOfElementLocated(
-                By.cssSelector("div.JobPostingsJobPosting__Layout-sc-6ae888f2-0.ffnSOB")));
-
-            while (true) {
-                Elements cards = container.select(
-                    "div.JobPostingsJobPosting__Layout-sc-6ae888f2-0.ffnSOB");
-
-                for (Element card : cards) {
-                    String detailUrl = getDetailUrl(driver, wait, card);
-                    String displayTitle = card.select(
-                            "h1.Heading-sc-7076dd01-0.JobPostingsJobPosting__Title-sc-6ae888f2-6.iBwyHC.gtFbzH")
-                        .text();
-                    String searchTitle = PREFIX_BRACKET_BLOCKS.matcher(displayTitle)
-                        .replaceFirst("");
-
-                    Elements details = card.select(
-                        "span.Body-sc-b30a2c4-0.JobPostingsJobPosting__Tag-sc-6ae888f2-8 kHpiRr.flPAJD");
-
-                    String category = "";
-                    String experienceLevel = "";
-                    String employmentType = "";
-                    String location = "";
-
-                    for (Element detail : details) {
-                        String text = detail.text();
-
-                        Field f = textToField.get(text);
-                        if (f != null) {
-                            switch (f) {
-                                case CATEGORY -> category = text;
-                                case EXPERIENCE -> experienceLevel = text;
-                                case EMPLOYMENT -> employmentType = text;
-                                case LOCATION -> location = text;
-                            }
-                        } else if (experienceLevel.isEmpty() && text.contains("경력")) {
-                            experienceLevel = text;
-                        }
-
-                        if (!category.isEmpty() && !experienceLevel.isEmpty()
-                            && !employmentType.isEmpty() && !location.isEmpty()) {
-                            break;
-                        }
-                    }
-
-                    jobPostings.add(
-                        new JobPostingDto(displayTitle, searchTitle, category, experienceLevel,
-                            employmentType, location, null,
-                            companyId));
-                }
-
-                WebElement next = driver.findElement(By.cssSelector(
-                    "div.JobPostingsPagination__StyleWrapper-sc-2cfa53e4-0.jQRYFm li.ant-pagination-next"));
-
-                if (next.getAttribute("aria-disabled").equals("true")) {
-                    break;
-                }
-
-                String prev = driver.findElement(By.cssSelector("li.ant-pagination-item-active"))
-                    .getText().trim();
-
-                driver.findElement(
-                        By.cssSelector("li.ant-pagination-next button.ant-pagination-item-link"))
-                    .click();
-
-                wait.until(d -> {
-                    try {
-                        String now = d.findElement(By.cssSelector("li.ant-pagination-item-active"))
-                            .getText().trim();
-                        return !now.equals(prev);
-                    } catch (Exception e) {
-                        return false;
-                    }
-                });
-
+            Map<String, List<String>> options = handleSideBar(driver, wait);
+            if (options.isEmpty()) {
+                logger.error(
+                    "HTML structure Error: Unable to find elements in NinehireV1Parser.handleSideBar for Company: {}, URL: {}",
+                    company.getName(), company.getRecruitmentUrl());
+                return null;
             }
 
+            List<JobPostingDto> jobPostings = handleJobCards(driver, wait, options, company.getId());
+            if (jobPostings.isEmpty()) {
+                logger.error(
+                    "HTML structure Error: Unable to find elements in NinehireV1Parser.handleJobCards for Company: {}, URL: {}",
+                    company.getName(), company.getRecruitmentUrl());
+                return null;
+            }
+            return jobPostings;
+
         } catch (Exception e) {
-            logger.error("Fail to handleJobCards in NinehireV1Parser: {}", e.getMessage());
+            logger.error("HTML structure Error: Unable to find elements in NinehireV1Parser for Company: {}, URL: {}", company.getName(), company.getRecruitmentUrl(), e);
         } finally {
             driver.quit();
+        }
+
+        return null;
+    }
+
+    private Map<String, List<String>> handleSideBar(WebDriver driver, WebDriverWait wait) {
+
+        Map<String, List<String>> options = new HashMap<>();
+
+        List<WebElement> categories = driver.findElements(By.cssSelector("div.JobPostingsSidebarFilters__FiltersLayout-sc-2062e5e7-0.hMKvYs div.JobPostingsSidebarFilter__Layout-sc-6112d8f1-0.khLaJL"));
+
+        // 모든 요소가 존재하는지 확인하기 위한 대기 생성
+
+        for (WebElement category : categories) {
+
+            String name = category.findElement(By.cssSelector(
+                    "span.Body-sc-b30a2c4-0.JobPostingsSidebarFilter__Title-sc-6112d8f1-4.kOYzOz"))
+                .getText();
+
+            List<WebElement> checks = driver.findElements(By.cssSelector(
+                "div.JobPostingsSidebarFilter__FilterRadioLayout-sc-6112d8f1-8.emJXFB"));
+
+            List<String> values = new ArrayList<>();
+            for (WebElement check : checks) {
+                values.add(check.findElement(By.cssSelector(
+                        "div.JobPostingsSidebarFilter__FilterRadioTitleLayout-sc-6112d8f1-10.cnucWc"))
+                    .getText());
+                // 여기서 다른 카테고리의 값도 전부 읽어옴 -> 탐색 범위를 줄이는 방법 탐구
+            }
+            options.put(name, values);
+            logger.info("name: {}, values: {}", name, values);
+        }
+
+
+
+        return options;
+    }
+
+    private List<JobPostingDto> handleJobCards(WebDriver driver, WebDriverWait wait, Map<String, List<String>> options,
+        Long companyId) {
+
+        List<JobPostingDto> jobPostings = new ArrayList<>();
+
+        Map<String, Field> textToField = buildTextToField(options);
+
+        WebElement container =  driver.findElement(By.cssSelector("div.JobPostingsSidebarTypeLayoutBody__Layout-sc-c28e05fb-0.gFjOAV"));
+
+        wait.until(ExpectedConditions.presenceOfElementLocated(
+            By.cssSelector("div.JobPostingsJobPosting__Layout-sc-6ae888f2-0.ffnSOB")));
+
+        while (true) {
+            List<WebElement> cards = container.findElements(By.cssSelector("div.JobPostingsJobPosting__Layout-sc-6ae888f2-0.ffnSOB"));
+
+            for (WebElement card : cards) {
+                String detailUrl = getDetailUrl(driver, wait, card);
+                String displayTitle = card.findElement(By.cssSelector(
+                        "h1.Heading-sc-7076dd01-0.JobPostingsJobPosting__Title-sc-6ae888f2-6.iBwyHC.gtFbzH")).getText();
+                String searchTitle = PREFIX_BRACKET_BLOCKS.matcher(displayTitle)
+                    .replaceFirst("");
+
+                List<WebElement> details = card.findElements(By.cssSelector(
+                    "span.Body-sc-b30a2c4-0.JobPostingsJobPosting__Tag-sc-6ae888f2-8 kHpiRr.flPAJD"));
+
+                String category = "";
+                String experienceLevel = "";
+                String employmentType = "";
+                String location = "";
+
+                for (WebElement detail : details) {
+                    String text = detail.getText();
+
+                    Field f = textToField.get(text);
+                    if (f != null) {
+                        switch (f) {
+                            case CATEGORY -> category = text;
+                            case EXPERIENCE -> experienceLevel = text;
+                            case EMPLOYMENT -> employmentType = text;
+                            case LOCATION -> location = text;
+                        }
+                    } else if (experienceLevel.isEmpty() && text.contains("경력")) {
+                        experienceLevel = text;
+                    }
+
+                    if (!category.isEmpty() && !experienceLevel.isEmpty()
+                        && !employmentType.isEmpty() && !location.isEmpty()) {
+                        break;
+                    }
+                }
+
+                jobPostings.add(
+                    new JobPostingDto(displayTitle, searchTitle, category, experienceLevel,
+                        employmentType, location, null,
+                        companyId));
+            }
+
+            WebElement next = driver.findElement(By.cssSelector(
+                "div.JobPostingsPagination__StyleWrapper-sc-2cfa53e4-0.jQRYFm li.ant-pagination-next"));
+
+            if (next.getAttribute("aria-disabled").equals("true")) {
+                break;
+            }
+
+            String prev = driver.findElement(By.cssSelector("li.ant-pagination-item-active"))
+                .getText().trim();
+
+            driver.findElement(
+                    By.cssSelector("li.ant-pagination-next button.ant-pagination-item-link"))
+                .click();
+
+            wait.until(d -> {
+                try {
+                    String now = d.findElement(By.cssSelector("li.ant-pagination-item-active"))
+                        .getText().trim();
+                    return !now.equals(prev);
+                } catch (Exception e) {
+                    return false;
+                }
+            });
+
         }
 
         return jobPostings;
     }
 
-    private String getDetailUrl(WebDriver driver, WebDriverWait wait, Element card) {
+    private String getDetailUrl(WebDriver driver, WebDriverWait wait, WebElement card) {
         return "detailUrl";
     }
 
