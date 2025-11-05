@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.regex.Pattern;
 import org.jsoup.nodes.Document;
 import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -39,7 +40,7 @@ public class NinehireV1Parser implements JobParser {
 
         // Chrome 옵션 설정
         ChromeOptions chromeOptions = new ChromeOptions();
-//        chromeOptions.addArguments("--headless");  // 헤드리스 모드 (UI 없이 실행)
+        chromeOptions.addArguments("--headless");  // 헤드리스 모드 (UI 없이 실행)
         chromeOptions.addArguments("--disable-gpu");
         chromeOptions.addArguments("--no-sandbox");
         chromeOptions.addArguments("--disable-dev-shm-usage");
@@ -59,7 +60,8 @@ public class NinehireV1Parser implements JobParser {
                 return null;
             }
 
-            List<JobPostingDto> jobPostings = handleJobCards(driver, wait, options, company.getId());
+            List<JobPostingDto> jobPostings = handleJobCards(driver, wait, options,
+                company.getId());
             if (jobPostings.isEmpty()) {
                 logger.error(
                     "HTML structure Error: Unable to find elements in NinehireV1Parser.handleJobCards for Company: {}, URL: {}",
@@ -69,7 +71,9 @@ public class NinehireV1Parser implements JobParser {
             return jobPostings;
 
         } catch (Exception e) {
-            logger.error("HTML structure Error: Unable to find elements in NinehireV1Parser for Company: {}, URL: {}", company.getName(), company.getRecruitmentUrl(), e);
+            logger.error(
+                "HTML structure Error: Unable to find elements in NinehireV1Parser for Company: {}, URL: {}",
+                company.getName(), company.getRecruitmentUrl(), e);
         } finally {
             driver.quit();
         }
@@ -81,54 +85,78 @@ public class NinehireV1Parser implements JobParser {
 
         Map<String, List<String>> options = new HashMap<>();
 
-        List<WebElement> categories = driver.findElements(By.cssSelector("div.JobPostingsSidebarFilters__FiltersLayout-sc-2062e5e7-0.hMKvYs div.JobPostingsSidebarFilter__Layout-sc-6112d8f1-0.khLaJL"));
-
-        // 모든 요소가 존재하는지 확인하기 위한 대기 생성
+        List<WebElement> categories = wait.until(
+            ExpectedConditions.presenceOfAllElementsLocatedBy(By.cssSelector(
+                "div.JobPostingsSidebarFilters__FiltersLayout-sc-2062e5e7-0.hMKvYs div.JobPostingsSidebarFilter__Layout-sc-6112d8f1-0.khLaJL")));
 
         for (WebElement category : categories) {
 
             String name = category.findElement(By.cssSelector(
-                    "span.Body-sc-b30a2c4-0.JobPostingsSidebarFilter__Title-sc-6112d8f1-4.kOYzOz"))
-                .getText();
+                "span.Body-sc-b30a2c4-0.JobPostingsSidebarFilter__Title-sc-6112d8f1-4.kOYzOz")).getText();
 
-            List<WebElement> checks = driver.findElements(By.cssSelector(
-                "div.JobPostingsSidebarFilter__FilterRadioLayout-sc-6112d8f1-8.emJXFB"));
+//            String name = wait.until(
+//                    ExpectedConditions.presenceOfNestedElementLocatedBy(category, By.cssSelector(
+//                        "span.Body-sc-b30a2c4-0.JobPostingsSidebarFilter__Title-sc-6112d8f1-4.kOYzOz")))
+//                .getText();
+//
+//            wait.until(
+//                ExpectedConditions.presenceOfNestedElementLocatedBy(category, By.cssSelector(
+//                    "div.JobPostingsSidebarFilter__FilterRadioLayout-sc-6112d8f1-8.emJXFB")));
+//            wait.until(ExpectedConditions.visibilityOfNestedElementsLocatedBy(category, By.cssSelector(
+//                "div.JobPostingsSidebarFilter__FilterRadioLayout-sc-6112d8f1-8.emJXFB")));
+
+            List<WebElement> checks = category.findElements(By.cssSelector("div.JobPostingsSidebarFilter__FilterRadioLayout-sc-6112d8f1-8.emJXFB"));
+
+            logger.info("checks size: {}", checks.size());
 
             List<String> values = new ArrayList<>();
             for (WebElement check : checks) {
-                values.add(check.findElement(By.cssSelector(
-                        "div.JobPostingsSidebarFilter__FilterRadioTitleLayout-sc-6112d8f1-10.cnucWc"))
-                    .getText());
-                // 여기서 다른 카테고리의 값도 전부 읽어옴 -> 탐색 범위를 줄이는 방법 탐구
+
+//                wait.until(ExpectedConditions.presenceOfNestedElementLocatedBy(check, By.cssSelector("div.JobPostingsSidebarFilter__FilterRadioTitleLayout-sc-6112d8f1-10.cnucWc")));
+//                wait.until(ExpectedConditions.visibilityOfNestedElementsLocatedBy(check, By.cssSelector("div.JobPostingsSidebarFilter__FilterRadioTitleLayout-sc-6112d8f1-10.cnucWc")));
+
+                WebElement element = check.findElement(By.cssSelector("div.JobPostingsSidebarFilter__FilterRadioTitleLayout-sc-6112d8f1-10.cnucWc"));
+
+                if (element.getText().isEmpty()) {
+                    element = element.findElement(By.cssSelector("span.Body-sc-b30a2c4-0.JobPostingsSidebarFilter__FilterRadioTitle-sc-6112d8f1-13.kHpiRr.deIPOu"));
+                }
+
+                logger.info("class: {}, size: {}, text: {}", element.getAttribute("class"), element.getSize(), element.getText().isEmpty());
+
+                values.add(element.getText());
+
+                // 필터 조건 중 일부가 누락되는 데, 그 정확한 원인을 파악하지 못했음.
+
             }
             options.put(name, values);
             logger.info("name: {}, values: {}", name, values);
         }
 
-
-
         return options;
     }
 
-    private List<JobPostingDto> handleJobCards(WebDriver driver, WebDriverWait wait, Map<String, List<String>> options,
-        Long companyId) {
+    private List<JobPostingDto> handleJobCards(WebDriver driver, WebDriverWait wait,
+        Map<String, List<String>> options, Long companyId) {
 
         List<JobPostingDto> jobPostings = new ArrayList<>();
 
         Map<String, Field> textToField = buildTextToField(options);
 
-        WebElement container =  driver.findElement(By.cssSelector("div.JobPostingsSidebarTypeLayoutBody__Layout-sc-c28e05fb-0.gFjOAV"));
+        WebElement container = driver.findElement(
+            By.cssSelector("div.JobPostingsSidebarTypeLayoutBody__Layout-sc-c28e05fb-0.gFjOAV"));
 
         wait.until(ExpectedConditions.presenceOfElementLocated(
             By.cssSelector("div.JobPostingsJobPosting__Layout-sc-6ae888f2-0.ffnSOB")));
 
         while (true) {
-            List<WebElement> cards = container.findElements(By.cssSelector("div.JobPostingsJobPosting__Layout-sc-6ae888f2-0.ffnSOB"));
+            List<WebElement> cards = container.findElements(
+                By.cssSelector("div.JobPostingsJobPosting__Layout-sc-6ae888f2-0.ffnSOB"));
 
             for (WebElement card : cards) {
                 String detailUrl = getDetailUrl(driver, wait, card);
                 String displayTitle = card.findElement(By.cssSelector(
-                        "h1.Heading-sc-7076dd01-0.JobPostingsJobPosting__Title-sc-6ae888f2-6.iBwyHC.gtFbzH")).getText();
+                        "h1.Heading-sc-7076dd01-0.JobPostingsJobPosting__Title-sc-6ae888f2-6.iBwyHC.gtFbzH"))
+                    .getText();
                 String searchTitle = PREFIX_BRACKET_BLOCKS.matcher(displayTitle)
                     .replaceFirst("");
 
