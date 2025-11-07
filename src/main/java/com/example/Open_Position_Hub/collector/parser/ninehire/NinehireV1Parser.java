@@ -14,14 +14,17 @@ import java.util.regex.Pattern;
 import org.jsoup.nodes.Document;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.actuate.autoconfigure.metrics.MetricsProperties.Web;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -145,9 +148,10 @@ public class NinehireV1Parser implements JobParser {
 
             List<WebElement> cards = driver.findElements(
                 By.cssSelector("div.JobPostingsJobPosting__Layout-sc-6ae888f2-0.ffnSOB"));
-            for (WebElement card : cards) {
+            for (int i = 0; i < cards.size(); i++) {
 
-                String detailUrl = getDetailUrl(driver, wait, card);
+                WebElement card = wait.until(ExpectedConditions.presenceOfAllElementsLocatedBy(By.cssSelector("div.JobPostingsJobPosting__Layout-sc-6ae888f2-0.ffnSOB"))).get(i);
+
                 String displayTitle = card.findElement(By.cssSelector(
                         "h1.Heading-sc-7076dd01-0.JobPostingsJobPosting__Title-sc-6ae888f2-6.iBwyHC.gtFbzH"))
                     .getText();
@@ -176,9 +180,12 @@ public class NinehireV1Parser implements JobParser {
                         break;
                     }
                 }
+
+                String detailUrl = getDetailUrl(driver, wait, card, driver.findElement(By.cssSelector("li.ant-pagination-item-active")).getText().trim());
+
                 jobPostings.add(
                     new JobPostingDto(displayTitle, searchTitle, category, experienceLevel,
-                        employmentType, location, null, companyId));
+                        employmentType, location, detailUrl, companyId));
             }
 
             WebElement nextLi = driver.findElement(By.cssSelector("li.ant-pagination-next"));
@@ -218,8 +225,142 @@ public class NinehireV1Parser implements JobParser {
         return jobPostings.stream().toList();
     }
 
-    private String getDetailUrl(WebDriver driver, WebDriverWait wait, WebElement card) {
-        return "detailUrl";
+    private String getDetailUrl(WebDriver driver, WebDriverWait wait, WebElement card, String page) {
+
+        String parent = driver.getWindowHandle();
+
+        // 1) 카드 내에서 클릭 타깃 및 href 추출 시도
+        //    - a[href]가 있으면 그게 제일 안전 (CSR도 접근성 때문에 대개 a를 둡니다)
+        WebElement clickable = card;
+//        try {
+//            clickable = card.findElement(By.cssSelector("a[href]"));
+//        } catch (Exception e) {
+//            // a가 없으면 제목 등 클릭 가능한 요소로 대체
+//            try {
+//                clickable = card.findElement(By.cssSelector(
+//                    "h1.Heading-sc-7076dd01-0.JobPostingsJobPosting__Title-sc-6ae888f2-6.iBwyHC.gtFbzH"
+//                ));
+//            } catch (Exception ex) {
+//                // 그래도 없으면 카드 전체 클릭
+//                clickable = card;
+//            }
+//        }
+//
+//        // href 직접 추출 (closest a 우선)
+//        String href = null;
+//        try {
+//            href = (String) ((JavascriptExecutor) driver).executeScript(
+//                "var n=arguments[0]; var a=n.closest('a[href]')||n.querySelector('a[href]'); return a?a.href:null;",
+//                clickable
+//            );
+//        } catch (Exception ignore) {}
+//
+//        // 2) href가 있으면: 새 탭으로 열어 URL만 가져오기 (부모는 그대로 유지)
+//        if (href != null && !href.isBlank()) {
+//            Set<String> before = driver.getWindowHandles();
+//            ((JavascriptExecutor) driver).executeScript("window.open(arguments[0], '_blank');", href);
+//
+//            String detailUrl = wait.until(d -> {
+//                Set<String> after = d.getWindowHandles();
+//                if (after.size() > before.size()) {
+//                    after.removeAll(before);
+//                    String child = after.iterator().next();
+//                    d.switchTo().window(child);
+//                    return (String) ((JavascriptExecutor) d).executeScript("return window.location.href");
+//                }
+//                return null;
+//            });
+//
+//            // 닫고 부모로 복귀
+//            driver.close();
+//            driver.switchTo().window(parent);
+//            return detailUrl;
+//        }
+
+        // 3) href가 없으면: Ctrl/Command + 클릭으로 새 탭 강제 (앵커가 없어도 라우터가 a로 감싸는 경우 많음)
+        {
+            Set<String> before = driver.getWindowHandles();
+            try {
+                // 뷰로 스크롤
+                ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block:'center'})", clickable);
+
+                // Windows/Linux: CONTROL, macOS: COMMAND 둘 다 시도
+                try {
+                    new Actions(driver).keyDown(Keys.CONTROL).click(clickable).keyUp(Keys.CONTROL).perform();
+                } catch (Exception e1) {
+                    try {
+                        new Actions(driver).keyDown(Keys.COMMAND).click(clickable).keyUp(Keys.COMMAND).perform();
+                    } catch (Exception ignore) {}
+                }
+
+                wait.until(d -> {
+                    Set<String> after = d.getWindowHandles();
+                    if (after.size() > before.size()) {
+                        after.removeAll(before);
+                        String child = after.iterator().next();
+                        d.switchTo().window(child);;
+                    }
+                    return null;
+                });
+//
+//                if (detailUrl != null) {
+//                    driver.close();
+//                    driver.switchTo().window(parent);
+//                    return detailUrl;
+//                }
+            } catch (Exception ignore) {}
+        }
+
+        // 4) 마지막 안전망: 같은 탭으로 들어가서 URL 읽고, "뒤로가기 후 원래 페이지 복구"
+        //    (이 경로가 문제의 원인이었으므로 복구 루틴을 덧댑니다)
+        String detailUrl = (String) ((JavascriptExecutor) driver).executeScript("return window.location.href");
+//        ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block:'center'})", clickable);
+//        ((JavascriptExecutor) driver).executeScript("arguments[0].click()", clickable);
+//
+//        // 라우팅 완료까지 대기
+//        String detailUrl = wait.until(d -> {
+//            String now = (String) ((JavascriptExecutor) d).executeScript("return window.location.href");
+//            return now.equals(listUrl) ? null : now;
+//        });
+
+        // 뒤로가기
+        driver.navigate().back();
+
+        // 목록 재등장
+
+        while (true) {
+
+            List<WebElement> curCards = driver.findElements(
+                By.cssSelector("div.JobPostingsJobPosting__Layout-sc-6ae888f2-0.ffnSOB"));
+            WebElement firstCard = curCards.isEmpty() ? null : curCards.get(0);
+
+            By CARD = By.cssSelector("div.JobPostingsJobPosting__Layout-sc-6ae888f2-0.ffnSOB");
+            wait.until(ExpectedConditions.numberOfElementsToBeMoreThan(CARD, 0));
+
+            WebElement nextLi = driver.findElement(By.cssSelector("li.ant-pagination-next"));
+            WebElement nextBtn = nextLi.findElement(
+                By.cssSelector("button.ant-pagination-item-link"));
+
+            String now = driver.findElement(By.cssSelector("li.ant-pagination-item-active"))
+                .getText().trim();
+
+            if (page.equals(now)) {
+                break;
+            }
+
+            ((JavascriptExecutor) driver).executeScript(
+                "arguments[0].scrollIntoView({block:'center'})", nextBtn);
+            ((JavascriptExecutor) driver).executeScript("arguments[0].click()", nextBtn);
+
+            if (firstCard != null) {
+                wait.until(ExpectedConditions.stalenessOf(firstCard));
+            }
+            wait.until(ExpectedConditions.numberOfElementsToBeMoreThan(
+                By.cssSelector("div.JobPostingsJobPosting__Layout-sc-6ae888f2-0.ffnSOB"), 0));
+
+        }
+
+        return detailUrl;
     }
 
     private Map<String, Field> buildTextToField(Map<String, List<String>> options) {
