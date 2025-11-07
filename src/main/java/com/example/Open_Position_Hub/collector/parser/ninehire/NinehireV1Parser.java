@@ -24,7 +24,6 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.actuate.autoconfigure.metrics.MetricsProperties.Web;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -57,7 +56,7 @@ public class NinehireV1Parser implements JobParser {
         try {
             driver.get(company.getRecruitmentUrl());
 
-            Map<String, List<String>> options = handleSideBar(driver, wait);
+            Map<String, List<String>> options = handleSideBar(wait);
             if (options.isEmpty()) {
                 logger.error(
                     "HTML structure Error: Unable to find elements in NinehireV1Parser.handleSideBar for Company: {}, URL: {}",
@@ -86,7 +85,7 @@ public class NinehireV1Parser implements JobParser {
         return null;
     }
 
-    private Map<String, List<String>> handleSideBar(WebDriver driver, WebDriverWait wait) {
+    private Map<String, List<String>> handleSideBar(WebDriverWait wait) {
 
         Map<String, List<String>> options = new HashMap<>();
 
@@ -122,7 +121,6 @@ public class NinehireV1Parser implements JobParser {
 
             }
             options.put(name, values);
-            logger.info("name: {}, values: {}", name, values);
         }
 
         return options;
@@ -134,9 +132,6 @@ public class NinehireV1Parser implements JobParser {
         Set<JobPostingDto> jobPostings = new HashSet<>();
 
         Map<String, Field> textToField = buildTextToField(options);
-
-        WebElement container = driver.findElement(
-            By.cssSelector("div.JobPostingsSidebarTypeLayoutBody__Layout-sc-c28e05fb-0.gFjOAV"));
 
         wait.until(ExpectedConditions.presenceOfElementLocated(
             By.cssSelector("div.JobPostingsJobPosting__Layout-sc-6ae888f2-0.ffnSOB")));
@@ -227,11 +222,8 @@ public class NinehireV1Parser implements JobParser {
 
     private String getDetailUrl(WebDriver driver, WebDriverWait wait, WebElement card, String page) {
 
-        String parent = driver.getWindowHandle();
-
         // 1) 카드 내에서 클릭 타깃 및 href 추출 시도
         //    - a[href]가 있으면 그게 제일 안전 (CSR도 접근성 때문에 대개 a를 둡니다)
-        WebElement clickable = card;
 //        try {
 //            clickable = card.findElement(By.cssSelector("a[href]"));
 //        } catch (Exception e) {
@@ -282,14 +274,14 @@ public class NinehireV1Parser implements JobParser {
             Set<String> before = driver.getWindowHandles();
             try {
                 // 뷰로 스크롤
-                ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block:'center'})", clickable);
+                ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block:'center'})", card);
 
                 // Windows/Linux: CONTROL, macOS: COMMAND 둘 다 시도
                 try {
-                    new Actions(driver).keyDown(Keys.CONTROL).click(clickable).keyUp(Keys.CONTROL).perform();
+                    new Actions(driver).keyDown(Keys.CONTROL).click(card).keyUp(Keys.CONTROL).perform();
                 } catch (Exception e1) {
                     try {
-                        new Actions(driver).keyDown(Keys.COMMAND).click(clickable).keyUp(Keys.COMMAND).perform();
+                        new Actions(driver).keyDown(Keys.COMMAND).click(card).keyUp(Keys.COMMAND).perform();
                     } catch (Exception ignore) {}
                 }
 
@@ -298,7 +290,7 @@ public class NinehireV1Parser implements JobParser {
                     if (after.size() > before.size()) {
                         after.removeAll(before);
                         String child = after.iterator().next();
-                        d.switchTo().window(child);;
+                        d.switchTo().window(child);
                     }
                     return null;
                 });
