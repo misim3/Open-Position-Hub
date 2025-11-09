@@ -73,6 +73,10 @@ class ManagerTest {
         return new CompanyEntity("yogiyo", "나인하이어", "https://wesangcareer.ninehire.site/");
     }
 
+    private CompanyEntity coinone() {
+        return new CompanyEntity("coinone", "나인하이어", "https://recruit.coinonecorp.com/");
+    }
+
     @Test
     void profileCheck() {
         System.out.println("▶ Active profile = " + System.getProperty("spring.profiles.active"));
@@ -107,7 +111,7 @@ class ManagerTest {
     @Test
     void test() {
 
-        companyRepository.save(yogiyo());
+        companyRepository.save(coinone());
 
         manager.scrape();
 
@@ -131,7 +135,7 @@ class ManagerTest {
             companyRepository.deleteAllInBatch();
 
             try {
-                companyRepository.save(yogiyo());
+                companyRepository.save(coinone());
                 manager.scrape();
 //              manager.check(); // 필요 시 포함
 

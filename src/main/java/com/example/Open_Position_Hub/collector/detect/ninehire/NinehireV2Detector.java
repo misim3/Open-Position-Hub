@@ -52,7 +52,7 @@ public class NinehireV2Detector implements LayoutDetector {
             driver.findElement(
                 By.cssSelector("div.JobPostingsDropdownTypeLayout__Layout-sc-3e4dd5d0-0.dTVKzy"));
 
-            return platformKey() + "/V1";
+            return platformKey() + "/V2";
         } catch (Exception e) {
             logger.error(e.getMessage());
         } finally {

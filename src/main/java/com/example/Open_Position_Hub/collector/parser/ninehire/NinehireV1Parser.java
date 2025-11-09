@@ -98,7 +98,7 @@ public class NinehireV1Parser implements JobParser {
             String name = wait.until(
                     ExpectedConditions.presenceOfNestedElementLocatedBy(category, By.cssSelector(
                         "span.Body-sc-753b8ac7-0.JobPostingsSidebarFilter__Title-sc-6112d8f1-4.lmySVU")))
-                .getText();
+                .getText().replace("전체", "").trim();
 
             wait.until(
                 ExpectedConditions.presenceOfNestedElementLocatedBy(category, By.cssSelector(
@@ -360,8 +360,8 @@ public class NinehireV1Parser implements JobParser {
         options.forEach((k, values) -> {
             Field f = switch (k) {
                 case "직군" -> Field.CATEGORY;
-                case "경력사항" -> Field.EXPERIENCE;
-                case "고용형태" -> Field.EMPLOYMENT;
+                case "경력사항", "경력 사항" -> Field.EXPERIENCE;
+                case "고용형태", "고용 형태" -> Field.EMPLOYMENT;
                 case "근무지" -> Field.LOCATION;
                 default -> null;
             };
