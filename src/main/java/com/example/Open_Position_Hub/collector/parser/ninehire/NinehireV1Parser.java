@@ -222,6 +222,8 @@ public class NinehireV1Parser implements JobParser {
 
     private String getDetailUrl(WebDriver driver, WebDriverWait wait, WebElement card, String page) throws RuntimeException {
 
+        String listUrl = driver.getCurrentUrl();
+
         // 1) 카드 내에서 클릭 타깃 및 href 추출 시도
         //    - a[href]가 있으면 그게 제일 안전 (CSR도 접근성 때문에 대개 a를 둡니다)
 //        try {
@@ -270,38 +272,38 @@ public class NinehireV1Parser implements JobParser {
 //        }
 
         // 3) href가 없으면: Ctrl/Command + 클릭으로 새 탭 강제 (앵커가 없어도 라우터가 a로 감싸는 경우 많음)
-        {
-            Set<String> before = driver.getWindowHandles();
+
+        Set<String> before = driver.getWindowHandles();
+        try {
+            // 뷰로 스크롤
+            ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block:'center'})", card);
+
+            // Windows/Linux: CONTROL, macOS: COMMAND 둘 다 시도
             try {
-                // 뷰로 스크롤
-                ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block:'center'})", card);
-
-                // Windows/Linux: CONTROL, macOS: COMMAND 둘 다 시도
+                new Actions(driver).keyDown(Keys.CONTROL).click(card).keyUp(Keys.CONTROL).perform();
+            } catch (Exception e1) {
                 try {
-                    new Actions(driver).keyDown(Keys.CONTROL).click(card).keyUp(Keys.CONTROL).perform();
-                } catch (Exception e1) {
-                    try {
-                        new Actions(driver).keyDown(Keys.COMMAND).click(card).keyUp(Keys.COMMAND).perform();
-                    } catch (Exception ignore) {}
-                }
+                    new Actions(driver).keyDown(Keys.COMMAND).click(card).keyUp(Keys.COMMAND).perform();
+                } catch (Exception ignore) {}
+            }
 
-                wait.until(d -> {
-                    Set<String> after = d.getWindowHandles();
-                    if (after.size() > before.size()) {
-                        after.removeAll(before);
-                        String child = after.iterator().next();
-                        d.switchTo().window(child);
-                    }
-                    return null;
-                });
+            wait.until(d -> {
+                Set<String> after = d.getWindowHandles();
+                if (after.size() > before.size()) {
+                    after.removeAll(before);
+                    String child = after.iterator().next();
+                    d.switchTo().window(child);
+                }
+                return null;
+            });
 //
 //                if (detailUrl != null) {
 //                    driver.close();
 //                    driver.switchTo().window(parent);
 //                    return detailUrl;
 //                }
-            } catch (Exception ignore) {}
-        }
+        } catch (Exception ignore) {}
+
 
         // 4) 마지막 안전망: 같은 탭으로 들어가서 URL 읽고, "뒤로가기 후 원래 페이지 복구"
         //    (이 경로가 문제의 원인이었으므로 복구 루틴을 덧댑니다)
@@ -316,17 +318,19 @@ public class NinehireV1Parser implements JobParser {
 //        });
 
         // 뒤로가기
-        driver.navigate().back();
+        driver.get(listUrl);
+        By CARD = By.cssSelector("div.JobPostingsJobPosting__Layout-sc-6ae888f2-0.ffnSOB");
+        wait.until(ExpectedConditions.presenceOfElementLocated(CARD));
+
+        wait.until(ExpectedConditions.numberOfElementsToBeMoreThan(CARD, 0));
 
         // 목록 재등장
 
         while (true) {
 
-            List<WebElement> curCards = driver.findElements(
-                By.cssSelector("div.JobPostingsJobPosting__Layout-sc-6ae888f2-0.ffnSOB"));
+            List<WebElement> curCards = driver.findElements(CARD);
             WebElement firstCard = curCards.isEmpty() ? null : curCards.get(0);
 
-            By CARD = By.cssSelector("div.JobPostingsJobPosting__Layout-sc-6ae888f2-0.ffnSOB");
             wait.until(ExpectedConditions.numberOfElementsToBeMoreThan(CARD, 0));
 
             WebElement nextLi = driver.findElement(By.cssSelector("li.ant-pagination-next"));
@@ -347,8 +351,7 @@ public class NinehireV1Parser implements JobParser {
             if (firstCard != null) {
                 wait.until(ExpectedConditions.stalenessOf(firstCard));
             }
-            wait.until(ExpectedConditions.numberOfElementsToBeMoreThan(
-                By.cssSelector("div.JobPostingsJobPosting__Layout-sc-6ae888f2-0.ffnSOB"), 0));
+            wait.until(ExpectedConditions.numberOfElementsToBeMoreThan(CARD, 0));
 
         }
 
