@@ -85,7 +85,7 @@ public class NinehireV1Parser implements JobParser {
         return null;
     }
 
-    private Map<String, List<String>> handleSideBar(WebDriverWait wait) {
+    private Map<String, List<String>> handleSideBar(WebDriverWait wait) throws RuntimeException {
 
         Map<String, List<String>> options = new HashMap<>();
 
@@ -127,7 +127,7 @@ public class NinehireV1Parser implements JobParser {
     }
 
     private List<JobPostingDto> handleJobCards(WebDriver driver, WebDriverWait wait,
-        Map<String, List<String>> options, Long companyId) {
+        Map<String, List<String>> options, Long companyId) throws RuntimeException {
 
         Set<JobPostingDto> jobPostings = new HashSet<>();
 
@@ -220,7 +220,7 @@ public class NinehireV1Parser implements JobParser {
         return jobPostings.stream().toList();
     }
 
-    private String getDetailUrl(WebDriver driver, WebDriverWait wait, WebElement card, String page) {
+    private String getDetailUrl(WebDriver driver, WebDriverWait wait, WebElement card, String page) throws RuntimeException {
 
         // 1) 카드 내에서 클릭 타깃 및 href 추출 시도
         //    - a[href]가 있으면 그게 제일 안전 (CSR도 접근성 때문에 대개 a를 둡니다)

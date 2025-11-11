@@ -44,7 +44,7 @@ public class NinehireV2Parser implements JobParser {
 
         // Chrome 옵션 설정
         ChromeOptions chromeOptions = new ChromeOptions();
-        //chromeOptions.addArguments("--headless");  // 헤드리스 모드 (UI 없이 실행)
+        chromeOptions.addArguments("--headless");  // 헤드리스 모드 (UI 없이 실행)
         chromeOptions.addArguments("--disable-gpu");
         chromeOptions.addArguments("--no-sandbox");
         chromeOptions.addArguments("--disable-dev-shm-usage");
@@ -85,7 +85,7 @@ public class NinehireV2Parser implements JobParser {
         return null;
     }
 
-    private Map<String, List<String>> handleFilterBar(WebDriver driver, WebDriverWait wait) {
+    private Map<String, List<String>> handleFilterBar(WebDriver driver, WebDriverWait wait) throws RuntimeException {
 
         Map<String, List<String>> options = new HashMap<>();
 
@@ -132,7 +132,7 @@ public class NinehireV2Parser implements JobParser {
 
 
     private List<JobPostingDto> handleJobCards(WebDriver driver, WebDriverWait wait,
-        Map<String, List<String>> options, Long companyId) {
+        Map<String, List<String>> options, Long companyId) throws RuntimeException {
 
         Set<JobPostingDto> jobPostings = new HashSet<>();
 
@@ -225,7 +225,7 @@ public class NinehireV2Parser implements JobParser {
         return jobPostings.stream().toList();
     }
 
-    private String getDetailUrl(WebDriver driver, WebDriverWait wait, WebElement card, String page) {
+    private String getDetailUrl(WebDriver driver, WebDriverWait wait, WebElement card, String page) throws RuntimeException {
 
         String listUrl = driver.getCurrentUrl();
 

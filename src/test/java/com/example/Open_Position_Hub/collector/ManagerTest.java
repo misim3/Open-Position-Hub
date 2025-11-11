@@ -111,7 +111,7 @@ class ManagerTest {
     @Test
     void test() {
 
-        companyRepository.save(coinone());
+        companyRepository.saveAll(List.of(yogiyo(), coinone()));
 
         manager.scrape();
 
