@@ -13,15 +13,14 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 @Component
-public class GreetingStrategy implements PlatformStrategy {
+public class NinehireStrategy implements PlatformStrategy {
 
-    private static final String key = "그리팅";
-    private static final Logger logger = LoggerFactory.getLogger(GreetingStrategy.class);
+    private static final String key = "나인하이어";
+    private static final Logger logger = LoggerFactory.getLogger(NinehireStrategy.class);
     private final DefaultDetectorRegistry defaultDetectorRegistry;
     private final ParserRegistry parserRegistry;
 
-    public GreetingStrategy(DefaultDetectorRegistry defaultDetectorRegistry,
-        ParserRegistry parserRegistry) {
+    public  NinehireStrategy(DefaultDetectorRegistry defaultDetectorRegistry, ParserRegistry parserRegistry) {
         this.defaultDetectorRegistry = defaultDetectorRegistry;
         this.parserRegistry = parserRegistry;
     }

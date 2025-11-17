@@ -5,10 +5,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.example.Open_Position_Hub.db.CompanyEntity;
 import com.example.Open_Position_Hub.db.CompanyRepository;
 import com.example.Open_Position_Hub.db.JobPostingRepository;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -65,6 +69,14 @@ class ManagerTest {
         return new CompanyEntity("abc2", "그리팅", null);
     }
 
+    private CompanyEntity yogiyo() {
+        return new CompanyEntity("yogiyo", "나인하이어", "https://wesangcareer.ninehire.site/");
+    }
+
+    private CompanyEntity coinone() {
+        return new CompanyEntity("coinone", "나인하이어", "https://recruit.coinonecorp.com/");
+    }
+
     @Test
     void profileCheck() {
         System.out.println("▶ Active profile = " + System.getProperty("spring.profiles.active"));
@@ -99,7 +111,7 @@ class ManagerTest {
     @Test
     void test() {
 
-        companyRepository.saveAll(List.of(doeat(), abc1(), abc2()));
+        companyRepository.saveAll(List.of(yogiyo(), coinone()));
 
         manager.scrape();
 
@@ -108,4 +120,72 @@ class ManagerTest {
         jobPostingRepository.findAll().forEach(System.out::println);
 
     }
+
+//    @Test
+//    @DisplayName("scrape() 안정성 샘플링(10회) - 예외 비율 리포트")
+//    void scrape_stability_sampling_10() {
+//        final int RUNS = 10;
+//
+//        int exceptions = 0;
+//        List<String> errorSummaries = new ArrayList<>();
+//
+//        for (int i = 1; i <= RUNS; i++) {
+//            // 각 회차 간 간섭 최소화를 위해 데이터 정리 (필요 시 유지/삭제 선택)
+//            jobPostingRepository.deleteAllInBatch();
+//            companyRepository.deleteAllInBatch();
+//
+//            try {
+//                companyRepository.save(coinone());
+//                manager.scrape();
+////              manager.check(); // 필요 시 포함
+//
+//                // 결과를 실제로 터치해 I/O 경로를 동일하게
+//                long count = jobPostingRepository.count();
+//                System.out.printf("[Run %02d] OK - jobPosting count=%d%n", i, count);
+//
+//            } catch (Throwable t) {
+//                exceptions++;
+//                StringWriter sw = new StringWriter();
+//                t.printStackTrace(new PrintWriter(sw));
+//                String stack = sw.toString();
+//
+//                // 한 줄 요약 + 상위 스택 몇 줄 추림
+//                String summary = String.format(
+//                    "[Run %02d] FAILED - %s: %s%n%s",
+//                    i,
+//                    t.getClass().getSimpleName(),
+//                    t.getMessage(),
+//                    trimStack(stack, 12) // 보여줄 스택 줄 수
+//                );
+//
+//                errorSummaries.add(summary);
+//                System.err.println(summary);
+//            }
+//        }
+//
+//        double rate = (exceptions * 100.0) / RUNS;
+//        System.out.printf("%n==== Summary ====%n");
+//        System.out.printf("Total: %d runs, Exceptions: %d (%.1f%%)%n", RUNS, exceptions, rate);
+//
+//        if (!errorSummaries.isEmpty()) {
+//            System.out.println("\n---- Error samples ----");
+//            errorSummaries.forEach(s -> System.out.println(s + "\n"));
+//        }
+//
+//        // 실패율 임계치 검증이 필요하면 주석 해제 (예: 20% 이하 기대)
+//        // assertTrue(rate <= 20.0, "Exception rate too high: " + rate + "%");
+//    }
+//
+//    /**
+//     * 스택트레이스를 상위 N줄만 보여주기 위한 헬퍼.
+//     */
+//    private static String trimStack(String full, int maxLines) {
+//        String[] lines = full.split("\\R");
+//        StringBuilder sb = new StringBuilder();
+//        for (int i = 0; i < Math.min(lines.length, maxLines); i++) {
+//            sb.append(lines[i]).append(System.lineSeparator());
+//        }
+//        if (lines.length > maxLines) sb.append("... (truncated)").append(System.lineSeparator());
+//        return sb.toString();
+//    }
 }

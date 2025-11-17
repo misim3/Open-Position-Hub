@@ -1,4 +1,4 @@
-package com.example.Open_Position_Hub.collector.parser.Greeting;
+package com.example.Open_Position_Hub.collector.parser.greeting;
 
 import com.example.Open_Position_Hub.collector.JobPostingDto;
 import com.example.Open_Position_Hub.collector.parser.JobParser;

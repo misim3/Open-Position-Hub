@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
+import com.example.Open_Position_Hub.collector.detect.greeting.GreetingV1Detector;
+import com.example.Open_Position_Hub.collector.detect.greeting.GreetingV2Detector;
 import java.util.List;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -29,14 +31,14 @@ class DefaultDetectorRegistryTest {
                 }
 
                 @Override
-                public String detect(Document doc) {
+                public String detect(DetectorDto dto) {
                     return "원티드/V1";
                 }
             }
         ));
 
         Document doc = Jsoup.parse("<html></html>");
-        assertNull(registry.detect("그리팅", doc));
+        assertNull(registry.detect("그리팅", new DetectorDto(doc, null)));
     }
 
     @Test
@@ -53,7 +55,7 @@ class DefaultDetectorRegistryTest {
                 "<div listviewtype='a'></div>"   // V2 히트
         );
 
-        String hit = registry.detect("그리팅", doc);
+        String hit = registry.detect("그리팅", new DetectorDto(doc, null));
         assertNotNull(hit);
         assertEquals("그리팅/V1", hit);
     }
@@ -73,7 +75,7 @@ class DefaultDetectorRegistryTest {
             }
 
             @Override
-            public String detect(Document doc) {
+            public String detect(DetectorDto dto) {
                 return "원티드/VX";
             }
         };
@@ -85,7 +87,7 @@ class DefaultDetectorRegistryTest {
         // 그리팅 V2만 감지 가능한 문서
         Document doc = Jsoup.parse("<div listviewtype='a'></div>");
 
-        String hit = registry.detect("그리팅", doc);
+        String hit = registry.detect("그리팅", new DetectorDto(doc, null));
         assertNotNull(hit);
         assertEquals("그리팅/V2", hit);
     }
@@ -105,7 +107,7 @@ class DefaultDetectorRegistryTest {
             } // 가장 먼저 호출되도록
 
             @Override
-            public String detect(Document doc) {
+            public String detect(DetectorDto dto) {
                 return null;
             }
         };
@@ -116,7 +118,7 @@ class DefaultDetectorRegistryTest {
         ));
 
         Document doc = Jsoup.parse("<div listviewtype='a'></div>");
-        String hit = registry.detect("그리팅", doc);
+        String hit = registry.detect("그리팅", new DetectorDto(doc, null));
         assertNotNull(hit);
         assertEquals("그리팅/V2", hit);
     }
@@ -129,6 +131,6 @@ class DefaultDetectorRegistryTest {
         );
 
         Document doc = Jsoup.parse("<div id='nothing'></div>");
-        assertNull(registry.detect("그리팅", doc));
+        assertNull(registry.detect("그리팅", new DetectorDto(doc, null)));
     }
 }

@@ -1,6 +1,7 @@
-package com.example.Open_Position_Hub.collector.detect;
+package com.example.Open_Position_Hub.collector.detect.greeting;
 
-import org.jsoup.nodes.Document;
+import com.example.Open_Position_Hub.collector.detect.DetectorDto;
+import com.example.Open_Position_Hub.collector.detect.LayoutDetector;
 import org.jsoup.nodes.Element;
 import org.springframework.stereotype.Component;
 
@@ -20,8 +21,8 @@ public class GreetingV1Detector implements LayoutDetector {
     }
 
     @Override
-    public String detect(Document doc) {
-        Element listViewB = doc.selectFirst("div[listviewtype='b']");
+    public String detect(DetectorDto dto) {
+        Element listViewB = dto.doc().selectFirst("div[listviewtype='b']");
         if (listViewB != null) {
             return platformKey() + "/V1";
         }

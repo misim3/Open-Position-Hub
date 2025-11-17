@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
+import com.example.Open_Position_Hub.collector.detect.greeting.GreetingV2Detector;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.junit.jupiter.api.DisplayName;
@@ -24,7 +25,7 @@ class GreetingV2DetectorTest {
     void detect_hitsWhenListViewTypeA() {
         GreetingV2Detector d = new GreetingV2Detector();
         Document doc = Jsoup.parse("<div listviewtype='a'></div>");
-        String hit = d.detect(doc);
+        String hit = d.detect(new DetectorDto(doc, null));
         assertNotNull(hit);
         assertEquals("그리팅/V2", hit);
     }
@@ -34,6 +35,6 @@ class GreetingV2DetectorTest {
     void detect_returnNullWhenNoMatch() {
         GreetingV2Detector d = new GreetingV2Detector();
         Document doc = Jsoup.parse("<div listviewtype='b'></div>");
-        assertNull(d.detect(doc));
+        assertNull(d.detect(new DetectorDto(doc, null)));
     }
 }
